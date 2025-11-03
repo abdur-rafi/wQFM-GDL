@@ -3,8 +3,6 @@ package src.Tree;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import src.PreProcessing.InternalNode;
-import src.PreProcessing.ComponentGraph;
 import src.PreProcessing.Component;
 import src.Taxon.RealTaxon;
 import src.Tree.TreePrinter.PrintableNode;

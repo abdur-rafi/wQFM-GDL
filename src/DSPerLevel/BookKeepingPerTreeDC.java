@@ -2,7 +2,6 @@ package src.DSPerLevel;
 
 import java.util.ArrayList;
 
-import src.Taxon.RealTaxon;
 
 public class BookKeepingPerTreeDC {
     boolean[] realTaxaInTree;

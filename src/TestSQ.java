@@ -127,8 +127,8 @@ public class TestSQ {
         BookKeepingPerLevelDC book = new BookKeepingPerLevelDC(
             ret.dc, taxa);
         
-        double[][] rtGains = new double[rts.length][2];
-        double[] dtGains = new double[0];
+        // double[][] rtGains = new double[rts.length][2];
+        // double[] dtGains = new double[0];
 
         // book.transferRealTaxon(0);
         // book.transferRealTaxon(2);

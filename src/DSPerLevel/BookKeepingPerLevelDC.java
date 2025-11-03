@@ -15,10 +15,7 @@ import src.PreProcessing.DataContainer;
 import src.PreProcessing.InternalNode;
 import src.PreProcessing.Component;
 import src.PreProcessing.Component.InternalNodeWithIndex;
-import src.ScoreCalculator.NumSatCalculatorBinaryNodeDC;
-import src.ScoreCalculator.NumSatCalculatorNodeEDC;
 import src.ScoreCalculator.NumSatSQ;
-import src.ScoreCalculator.NumSatSQBin;
 import src.ScoreCalculator.NumSatSQBin2;
 import src.Taxon.DummyTaxon;
 import src.Taxon.RealTaxon;
@@ -107,7 +104,6 @@ public class BookKeepingPerLevelDC {
 
 
     public double calculateScore(){
-        double score = 0;
 
         double sat = 0;
         double vio = 0;
