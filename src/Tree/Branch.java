@@ -97,8 +97,8 @@ public class Branch {
                 int dtid = taxaPerLevel.inWhichDummyTaxa(rt.id);
                 int partition = taxaPerLevel.inWhichPartitionDummyTaxonByIndex(dtid);
                 double weight = weights[rt.id];
-                this.dummyTaxaWeightsIndividual[dtid] += weight;
-                this.totalTaxaCounts[partition] += weight;
+                this.dummyTaxaWeightsIndividual[dtid] += 1. / weight;
+                this.totalTaxaCounts[partition] += 1. / weight;
             }
             else{
                 int partition = taxaPerLevel.inWhichPartition(rt.id);
