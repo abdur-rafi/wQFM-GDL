@@ -2,7 +2,6 @@ package src.DSPerLevel;
 
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
@@ -25,7 +24,7 @@ public class BookKeepingPerLevelDC {
 
     public DataContainer dc;
     public TaxaPerLevelWithPartition taxaPerLevel;
-    BookKeepingPerTreeDC[] bookKeepingPerTreeDCs;
+    // BookKeepingPerTreeDC[] bookKeepingPerTreeDCs;
 
     public BookKeepingPerLevelDC(DataContainer dc, TaxaPerLevelWithPartition taxaPerLevelWithPartition){
         this.dc = dc;
@@ -34,10 +33,10 @@ public class BookKeepingPerLevelDC {
             return;
 
         this.initialBookKeeping();
-        this.bookKeepingPerTreeDCs = new BookKeepingPerTreeDC[dc.realTaxaInTrees.length];
-        for(int i = 0; i < dc.realTaxaInTrees.length; ++i){
-            this.bookKeepingPerTreeDCs[i] = new BookKeepingPerTreeDC(dc.realTaxaInTrees[i], this.taxaPerLevel);
-        }
+        // this.bookKeepingPerTreeDCs = new BookKeepingPerTreeDC[dc.realTaxaInTrees.length];
+        // for(int i = 0; i < dc.realTaxaInTrees.length; ++i){
+        //     this.bookKeepingPerTreeDCs[i] = new BookKeepingPerTreeDC(dc.realTaxaInTrees[i], this.taxaPerLevel);
+        // }
 
     }
 
@@ -66,6 +65,7 @@ public class BookKeepingPerLevelDC {
         this.dc.sentinel.data.branch = new Branch(this.taxaPerLevel.dummyTaxonCount);
 
         int sz = this.dc.topSortedComponents.size();
+
         for(int i = sz - 1; i >  -1; --i){
             Component p = this.dc.topSortedComponents.get(i);
             if(p.isLeaf){
@@ -85,6 +85,28 @@ public class BookKeepingPerLevelDC {
             for(int i = 0; i < p.childs.length; ++i){
                 childs[i] = p.childs[i].data.branch;
             }
+
+            // adjust dummy taxa weights in case of absent taxa in this internal node
+
+            double[] weights = new double[this.taxaPerLevel.allRealTaxaCount];
+            for(var dt : this.taxaPerLevel.dummyTaxa){
+                dt.calcDivCoeffsWithAbsentTaxa(Config.SCORE_NORMALIZATION_TYPE, weights, sz, p.realTaxaPresent);
+            }
+            for(var x : this.taxaPerLevel.realTaxa){
+                weights[x.id] = 1;
+            }
+
+            for(int i = 0; i < p.childs.length; ++i){
+                childs[i].calculateAllFromListOfTaxa(
+                    p.childs[i].realTaxaInComponent,
+                    weights, taxaPerLevel
+                );
+            }
+            p.parent.data.branch.calculateAllFromListOfTaxa(
+                p.parent.realTaxaInComponent,
+                weights, taxaPerLevel
+            );
+
 
             if(p.childs.length > 2){
                 // p.scoreCalculator = new NumSatCalculatorNodeEDC(b,this.taxaPerLevel.dummyTaxonPartition);
@@ -277,49 +299,49 @@ public class BookKeepingPerLevelDC {
 
 
 
-    public void batchTrasferRealTaxon(ArrayList<Integer> realTaxonIndices){
-        ArrayList<Integer> currPartitions = new ArrayList<>();
-        ArrayList<Integer> realTaxonIds = new ArrayList<>();
+    // public void batchTrasferRealTaxon(ArrayList<Integer> realTaxonIndices){
+    //     ArrayList<Integer> currPartitions = new ArrayList<>();
+    //     ArrayList<Integer> realTaxonIds = new ArrayList<>();
 
-        for(int i = 0; i < realTaxonIndices.size(); ++i){
-            int index = realTaxonIndices.get(i);
-            int partition = this.taxaPerLevel.inWhichPartitionRealTaxonByIndex(index);
-            currPartitions.add(partition);
-            realTaxonIds.add(this.taxaPerLevel.realTaxa[index].id);
-        }
+    //     for(int i = 0; i < realTaxonIndices.size(); ++i){
+    //         int index = realTaxonIndices.get(i);
+    //         int partition = this.taxaPerLevel.inWhichPartitionRealTaxonByIndex(index);
+    //         currPartitions.add(partition);
+    //         realTaxonIds.add(this.taxaPerLevel.realTaxa[index].id);
+    //     }
         
 
-        for(BookKeepingPerTreeDC bkpt : this.bookKeepingPerTreeDCs){
-            bkpt.batchTranserRealTaxon(realTaxonIds, currPartitions);
-        }
+    //     for(BookKeepingPerTreeDC bkpt : this.bookKeepingPerTreeDCs){
+    //         bkpt.batchTranserRealTaxon(realTaxonIds, currPartitions);
+    //     }
 
-        Queue<Utility.Pair<Component, Integer>> q = new ArrayDeque<>();
+    //     Queue<Utility.Pair<Component, Integer>> q = new ArrayDeque<>();
 
-        for(Integer rtId : realTaxonIds){
-            q.add(new Utility.Pair<Component,Integer>(this.dc.realTaxaComponents[rtId], this.taxaPerLevel.inWhichPartition(rtId)));
-        }
+    //     for(Integer rtId : realTaxonIds){
+    //         q.add(new Utility.Pair<Component,Integer>(this.dc.realTaxaComponents[rtId], this.taxaPerLevel.inWhichPartition(rtId)));
+    //     }
 
-        Set<InternalNode> st = new HashSet<>();
+    //     Set<InternalNode> st = new HashSet<>();
 
-        while(!q.isEmpty()){
-            var f = q.poll();
-            for(InternalNodeWithIndex p : f.first.partOfInternalNodes){
-                p.internalNode.cumulateTransfer(p.index, f.second);
-                st.add(p.internalNode);
-            }
-            for(var x : f.first.parents){
-                q.add(new Utility.Pair<Component, Integer>(x, f.second));
-            }
-            // q.addAll(f.parents);
-        }
+    //     while(!q.isEmpty()){
+    //         var f = q.poll();
+    //         for(InternalNodeWithIndex p : f.first.partOfInternalNodes){
+    //             p.internalNode.cumulateTransfer(p.index, f.second);
+    //             st.add(p.internalNode);
+    //         }
+    //         for(var x : f.first.parents){
+    //             q.add(new Utility.Pair<Component, Integer>(x, f.second));
+    //         }
+    //         // q.addAll(f.parents);
+    //     }
 
-        for(var x : st){
-            x.batchTransfer();
-        }
+    //     for(var x : st){
+    //         x.batchTransfer();
+    //     }
 
-        this.taxaPerLevel.batchTransferRealTaxon(realTaxonIndices);
+    //     this.taxaPerLevel.batchTransferRealTaxon(realTaxonIndices);
 
-    }
+    // }
 
 
     public void transferRealTaxon(int index){

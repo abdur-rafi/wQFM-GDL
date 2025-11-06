@@ -3,6 +3,8 @@ package src.PreProcessing;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import src.Taxon.RealTaxon;
+
 public class Component{
 
     public static class InternalNodeWithIndex{
@@ -25,7 +27,7 @@ public class Component{
     public boolean isLeaf;
     public String label;
 
-
+    public ArrayList<RealTaxon> realTaxaInComponent;
 
     public Data data;
 
@@ -52,6 +54,7 @@ public class Component{
         // this.gainPartition = false;
         // this.onlyGainPartition = false;
         this.nodeCount = 0;
+        this.realTaxaInComponent = null;
         
     }
     
@@ -93,5 +96,9 @@ public class Component{
             }
         }
         return members;
+    }
+
+    public void setRealTaxaInComponent(ArrayList<RealTaxon> realTaxa){
+        this.realTaxaInComponent = realTaxa;
     }
 }

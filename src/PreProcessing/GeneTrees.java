@@ -212,6 +212,18 @@ public class GeneTrees {
         dataContainer.internalNodes = internalNodes.nodes;
         dataContainer.topSortedComponents = compGraph.getTopSortedNodes();
 
+        for (var comp : compGraph.components){
+            comp.setRealTaxaInComponent(
+                compGraph.listrealTaxaInComponent(comp)
+            );
+        }
+
+        for (var node : dataContainer.internalNodes){
+            node.setRealTaxaPresent(
+                compGraph.getRealTaxaInInternalNode(node)
+            );
+        }
+
         // System.out.println("================ comps ===================");
         // for(var x : compGraph.components){
         //     System.out.println(x);

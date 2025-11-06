@@ -1,5 +1,10 @@
 package src.Tree;
 
+import java.util.ArrayList;
+
+import src.DSPerLevel.TaxaPerLevelWithPartition;
+import src.Taxon.RealTaxon;
+
 public class Branch {
     public int[] realTaxaCounts;
     // public double[] dummyTaxaWeightSums;
@@ -70,6 +75,36 @@ public class Branch {
         }
         for(int i = 0; i < this.dummyTaxaWeightsIndividual.length; ++i){
             this.dummyTaxaWeightsIndividual[i] += b.dummyTaxaWeightsIndividual[i];
+        }
+    }
+
+    public void calculateAllFromListOfTaxa(
+        ArrayList<RealTaxon> realTaxaInComponent,
+        double[] weights,
+        TaxaPerLevelWithPartition taxaPerLevel
+    ){
+        // reset first 
+        this.realTaxaCounts[0] = 0;
+        this.realTaxaCounts[1] = 0;
+        this.totalTaxaCounts[0] = 0;
+        this.totalTaxaCounts[1] = 0;
+        for(int i = 0; i < this.dummyTaxaWeightsIndividual.length; ++i){
+            this.dummyTaxaWeightsIndividual[i] = 0;
+        }
+
+        for(var rt : realTaxaInComponent){
+            if(taxaPerLevel.isInDummyTaxa(rt.id)){
+                int dtid = taxaPerLevel.inWhichDummyTaxa(rt.id);
+                int partition = taxaPerLevel.inWhichPartitionDummyTaxonByIndex(dtid);
+                double weight = weights[rt.id];
+                this.dummyTaxaWeightsIndividual[dtid] += weight;
+                this.totalTaxaCounts[partition] += weight;
+            }
+            else{
+                int partition = taxaPerLevel.inWhichPartition(rt.id);
+                this.realTaxaCounts[partition]++;
+                this.totalTaxaCounts[partition]++;
+            }    
         }
     }
 }

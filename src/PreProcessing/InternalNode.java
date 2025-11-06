@@ -15,6 +15,10 @@ public class InternalNode {
     public int count;
     public NumSatSQ scoreCalculator;
 
+    public boolean[] realTaxaPresent;
+
+
+
     public InternalNode(Component[] childs, Component parent){
         this.childs = childs;
         this.parent = parent;
@@ -22,7 +26,7 @@ public class InternalNode {
         this.count = 1;
         this.scoreCalculator = null;
 
-
+        this.realTaxaPresent = null;
 
         if(childs.length > 2){
             System.out.println("polytomy");
@@ -39,6 +43,10 @@ public class InternalNode {
 
     public void increaseCount(){
         this.count++;
+    }
+
+    public void setRealTaxaPresent(boolean[] realTaxaInChilds){
+        this.realTaxaPresent = realTaxaInChilds;
     }
     
     
