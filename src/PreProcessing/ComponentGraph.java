@@ -288,7 +288,7 @@ public class ComponentGraph {
     public ArrayList<RealTaxon> listrealTaxaInComponent(Component c){
         ArrayList<RealTaxon> list = new ArrayList<>();
         boolean[] realTaxaInSubTree = this.realTaxaInComponent.get(c);
-        System.out.print("Component: ");
+        // System.out.print("Component: ");
         for(int i = 0; i < this.taxa.length; ++i){
             if(realTaxaInSubTree[i]){
                 list.add(this.taxa[i]);
