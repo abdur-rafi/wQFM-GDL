@@ -44,6 +44,9 @@ public class ComponentGraph {
         }
 
         this.sentinel = new Component(true);
+        this.sentinel.setRealTaxaInComponent(
+            new ArrayList<>()
+        );
         boolean[] realTaxaInSubTree = new boolean[taxa.length];
         this.realTaxaInComponent.put(this.sentinel, realTaxaInSubTree);
         this.stringIdToComponent.put(Utility.getComponentString(realTaxaInSubTree), this.sentinel);

@@ -218,6 +218,12 @@ public class GeneTrees {
             );
         }
 
+        for (var comp : compGraph.taxaPartitionNodes){
+            comp.setRealTaxaInComponent(
+                compGraph.listrealTaxaInComponent(comp)
+            );
+        }
+
         for (var node : dataContainer.internalNodes){
             node.setRealTaxaPresent(
                 compGraph.getRealTaxaInInternalNode(node)
@@ -258,6 +264,7 @@ public class GeneTrees {
         }
         dataContainer.taxa = this.taxa;
         dataContainer.sentinel = compGraph.getSentinel();
+        
 
         System.out.println("Comp graph nodes count : " + compGraph.count);
         System.out.println("Internal nodes count : " + internalNodes.nodes.size());

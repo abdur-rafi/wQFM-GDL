@@ -26,21 +26,21 @@ public class Main {
         //     System.exit(-1);
         // }
 
-        // inputFilePath = args[0];
-        // consensusFilePath = args[1];
-        // outputFilePath = args[2];
+        inputFilePath = args[0];
+        consensusFilePath = args[1];
+        outputFilePath = args[2];
 
         // inputFilePath = "./input/rootingTest.txt";
         // consensusFilePath = "./input/rootingTest.txt";
         // outputFilePath = "./output.tre";
 
-        // inputFilePath = "./input/exa.txt";
-        // consensusFilePath = "./input/exaCons.txt";
-        // outputFilePath = "./output.tre";
+        // consensusFilePath = "test-data/e100-consensus.greedy.tree";
+        // inputFilePath = "test-data/e100-disco-rooted-cleaned.tre";
+        // outputFilePath = "test-data/output.tre";
 
-        inputFilePath = args[0];
-        consensusFilePath = args[1];
-        outputFilePath = args[2];
+        // inputFilePath = args[0];
+        // consensusFilePath = args[1];
+        // outputFilePath = args[2];
         // String nonQuartetType = args[3];
         
         // if(nonQuartetType.equals("A")){
