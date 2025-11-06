@@ -52,6 +52,9 @@ public class Main {
         //     System.exit(-1);
         // }
 
+        System.out.println("Input file: " + inputFilePath);
+        System.out.println("Consensus file: " + consensusFilePath);
+        System.out.println("Output file: " + outputFilePath);
 
         // String inputFilePath = "../run/15-taxon/1000gene-1000bp/R1/all_gt_cleaned.tre";
         // String consensusFilePath = "../run/15-taxon/1000gene-1000bp/R1/cons.tre";
