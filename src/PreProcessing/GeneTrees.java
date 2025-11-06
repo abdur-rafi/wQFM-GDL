@@ -346,7 +346,7 @@ public class GeneTrees {
                     for(int j = 0; j < node.childs.size(); ++j){
                         childComps[j] = node.childs.get(j).childComponent;
                     }
-                    // var x = internalNodes.addInternalNode(childComps, node.speciationParentComponent);
+                    internalNodes.addInternalNode(childComps, node.speciationParentComponent);
                     
                     // System.out.println( "node : " + node.index + " partition: " + x);
                 }
