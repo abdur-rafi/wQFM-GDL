@@ -90,7 +90,7 @@ public class BookKeepingPerLevelDC {
 
             double[] weights = new double[this.taxaPerLevel.allRealTaxaCount];
             for(var dt : this.taxaPerLevel.dummyTaxa){
-                dt.calcDivCoeffsWithAbsentTaxa(Config.SCORE_NORMALIZATION_TYPE, weights, sz, p.realTaxaPresent);
+                dt.calcDivCoeffsWithAbsentTaxa(Config.SCORE_NORMALIZATION_TYPE, weights, 1, p.realTaxaPresent);
             }
             for(var x : this.taxaPerLevel.realTaxa){
                 weights[x.id] = 1;
