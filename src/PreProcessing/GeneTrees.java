@@ -170,7 +170,9 @@ public class GeneTrees {
             // }
 
             tree.calculateFrequencies(triPartitions);
-            tree.tag();
+            if(!Config.USE_EXTERNAL_TAGGING){
+                tree.tag();
+            }
             geneTrees.add(tree);
 
             // tree.generateQuartets(quartestsList);
