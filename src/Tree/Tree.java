@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import src.Config;
 import src.Quartets.QuartestsList;
 import src.Quartets.Quartet;
 import src.Taxon.RealTaxon;
@@ -163,6 +164,128 @@ public class Tree {
 
     }
 
+    private void parseFromNewickWithDuplication(String newickLine){
+
+        // Map<String, RealTaxon> taxaMap = new HashMap<>();
+        int leavesCount = 0;
+
+        nodes = new ArrayList<>();
+    
+        Stack<TreeNode> nodes = new Stack<>();
+        newickLine = newickLine.replaceAll("\\s", "");
+    
+        int n = newickLine.length();
+    
+        int i = 0, j = 0;
+    
+        while(i < n){
+            char curr = newickLine.charAt(i);
+            if(curr == '('){
+                nodes.push(null);
+            }
+            else if(curr == ')'){
+                ArrayList<TreeNode> arr = new ArrayList<>();
+                while( !nodes.isEmpty() && nodes.peek() != null){
+                    arr.add(nodes.pop());
+                }
+                if(!nodes.isEmpty())
+                    nodes.pop();
+                TreeNode newInternalNode = addInternalNode(arr);
+                
+                // Check if the next character is 'D' (duplication marker)
+                if(i + 1 < n && newickLine.charAt(i + 1) == 'D'){
+                    newInternalNode.dupplicationNode = true;
+                    i++; // Skip the 'D' character
+                }
+                
+                nodes.push(newInternalNode);
+                
+            }
+            else if(curr == ',' || curr == ';'){
+    
+            }
+            else{
+                StringBuilder taxa = new StringBuilder();
+                j = i;
+                TreeNode newNode = null;
+                while(j < n){
+                    char curr_j = newickLine.charAt(j);
+                    if(curr_j == ')' || curr_j == ','){
+                        RealTaxon taxon;
+                        // if(this.taxaMap != null){
+                            taxon = this.taxaMap.get(taxa.toString());
+                        // }
+                        // else{
+                        //     taxon = new RealTaxon(taxa.toString());
+                        //     taxaMap.put(taxon.label, taxon);
+                        // }   
+                        newNode = addLeaf(taxon);
+                        leavesCount++;
+
+                        break;
+                    }
+                    taxa.append(curr_j);
+                    ++j;
+                }
+                if(j == n){
+                    leavesCount++;
+                    RealTaxon taxon;
+                    // if(this.taxaMap != null){
+                        taxon = this.taxaMap.get(taxa.toString());
+                    // }
+                    // else{
+                    //     taxon = new RealTaxon(taxa.toString());
+                    //     taxaMap.put(taxon.label, taxon);
+                    // }   
+                    newNode = addLeaf(taxon);
+                }
+                i = j - 1;
+                nodes.push(newNode);
+            }
+            ++i;
+        }
+
+        // if(this.taxaMap == null)
+        //     this.taxaMap = taxaMap;
+
+        // this.leavesCount = this.taxaMap.size();
+        this.leavesCount = leavesCount;
+
+        for(var x : nodes){
+            if(x.isLeaf()){
+                this.taxaInTreeIds.add(x.taxon.id);
+            }
+        }
+    
+        root = nodes.lastElement();
+        
+        if(root.childs.size() > 2){
+            // System.out.println(newickLine);
+            // System.out.println("laksjdfljkd");
+            balanceRoot();
+        }
+        
+        
+        // filterLeaves();
+        topSort();
+
+        // System.out.println(this.leavesCount);
+        // for( i = 0; i < this.leaves.length; ++i){
+        //     if(this.leaves[i] == null){
+        //         System.out.println("Error: Taxon " + i + " is not present in tree");
+        //         System.exit(-1);
+        //     }
+        //     if(this.leaves[i].taxon.id != i){
+        //         System.out.println("Error: Taxon " + i + " not matching");
+        //         System.exit(-1);
+        //     }
+        // }
+        // bringLeafsToFront();
+
+
+
+    }
+
     // private void filterLeaves(){
     //     this.leaves = new TreeNode[this.taxaMap.size()];
     //     for(var x : nodes){
@@ -231,7 +354,12 @@ public class Tree {
     public Tree(String newickLine, Map<String, RealTaxon> taxaMap){
         this.taxaMap = taxaMap;
         this.taxaInTreeIds = new HashSet<>();
-        parseFromNewick(newickLine);
+        if(Config.USE_EXTERNAL_TAGGING){
+            parseFromNewickWithDuplication(newickLine);
+        }
+        else{
+            parseFromNewick(newickLine);
+        }
     }
 
     public Tree(){
