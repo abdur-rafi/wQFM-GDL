@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import src.Taxon.RealTaxon;
+import src.Tree.Branch;
 
 public class Component{
 
@@ -29,7 +30,8 @@ public class Component{
 
     public ArrayList<RealTaxon> realTaxaInComponent;
 
-    public Data data;
+    // public Data data;
+    public ArrayList<Data> dataList;
 
     // public boolean gainPartition;
     // public boolean onlyGainPartition;
@@ -45,12 +47,24 @@ public class Component{
         
     // }
 
+    public void initializeDataListForEachInternalNode(
+        int dummyTaxonCount
+    ){
+        this.dataList = new ArrayList<>();
+        for(int i = 0; i < this.partOfInternalNodes.size(); ++i){
+            this.dataList.add(new Data());
+        }
+        for(Data d: this.dataList){
+            d.branch = new Branch(dummyTaxonCount);
+        }
+    }
+
     public Component(boolean isLeaf){
         this.parents = new ArrayList<Component>();
         this.children = new ArrayList<Component>();
         this.isLeaf = isLeaf;
         this.partOfInternalNodes = new ArrayList<>();
-        this.data = null;
+        this.dataList = new ArrayList<>();
         // this.gainPartition = false;
         // this.onlyGainPartition = false;
         this.nodeCount = 0;
@@ -66,8 +80,9 @@ public class Component{
         this.parents.add(parent);
     }
 
-    public void addInternalNode(InternalNode p, int index){
+    public int addInternalNode(InternalNode p, int index){
         this.partOfInternalNodes.add(new InternalNodeWithIndex(p, index));
+        return this.partOfInternalNodes.size() - 1;
     }
 
 

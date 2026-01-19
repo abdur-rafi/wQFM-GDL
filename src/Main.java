@@ -15,9 +15,13 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        String inputFilePath = "";
-        String consensusFilePath = "";
-        String outputFilePath = "";
+        // String inputFilePath = "input/gtree_11tax_est_5genes_R1.tre";
+        // String consensusFilePath = "input/gtree_11tax_est_5genes_R1.tre-cleaned-cons.greedy.tree";
+        // String outputFilePath = "input/output.tre";
+
+        String inputFilePath = "input/01/e100-disco-rooted-cleaned.tre";
+        String consensusFilePath = "input/01/e100-consensus.greedy.tree";
+        String outputFilePath = "input/output.tre";
 
 
 
@@ -26,9 +30,9 @@ public class Main {
         //     System.exit(-1);
         // }
 
-        inputFilePath = args[0];
-        consensusFilePath = args[1];
-        outputFilePath = args[2];
+        // inputFilePath = args[0];
+        // consensusFilePath = args[1];
+        // outputFilePath = args[2];
 
         // inputFilePath = "./input/rootingTest.txt";
         // consensusFilePath = "./input/rootingTest.txt";
@@ -38,9 +42,9 @@ public class Main {
         // inputFilePath = "test-data/e100-disco-rooted-cleaned.tre";
         // outputFilePath = "test-data/output.tre";
 
-        // inputFilePath = args[0];
-        // consensusFilePath = args[1];
-        // outputFilePath = args[2];
+        inputFilePath = args[0];
+        consensusFilePath = args[1];
+        outputFilePath = args[2];
         // String nonQuartetType = args[3];
         
         // if(nonQuartetType.equals("A")){
