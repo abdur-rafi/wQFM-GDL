@@ -2,7 +2,7 @@
 
 This repository contains the official implementation of
 
-[**wQFM-GDL Enables Accurate Quartet-based Genome-scale Species Tree Inference Under Gene Duplication and Loss**]([https://www.biorxiv.org/content/10.1101/2025.04.04.647228v3])
+[**wQFM-GDL Enables Accurate Quartet-based Genome-scale Species Tree Inference Under Gene Duplication and Loss**](https://academic.oup.com/bioinformaticsadvances/article/5/1/vbaf053/8075148](https://www.biorxiv.org/content/10.1101/2025.04.04.647228v3)
 
 ## Execution dependencies
 
