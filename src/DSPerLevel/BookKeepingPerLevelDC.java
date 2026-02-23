@@ -2,7 +2,6 @@ package src.DSPerLevel;
 
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
@@ -25,7 +24,7 @@ public class BookKeepingPerLevelDC {
 
     public DataContainer dc;
     public TaxaPerLevelWithPartition taxaPerLevel;
-    BookKeepingPerTreeDC[] bookKeepingPerTreeDCs;
+    // BookKeepingPerTreeDC[] bookKeepingPerTreeDCs;
 
     public BookKeepingPerLevelDC(DataContainer dc, TaxaPerLevelWithPartition taxaPerLevelWithPartition){
         this.dc = dc;
@@ -34,57 +33,87 @@ public class BookKeepingPerLevelDC {
             return;
 
         this.initialBookKeeping();
-        this.bookKeepingPerTreeDCs = new BookKeepingPerTreeDC[dc.realTaxaInTrees.length];
-        for(int i = 0; i < dc.realTaxaInTrees.length; ++i){
-            this.bookKeepingPerTreeDCs[i] = new BookKeepingPerTreeDC(dc.realTaxaInTrees[i], this.taxaPerLevel);
-        }
+        // this.bookKeepingPerTreeDCs = new BookKeepingPerTreeDC[dc.realTaxaInTrees.length];
+        // for(int i = 0; i < dc.realTaxaInTrees.length; ++i){
+        //     this.bookKeepingPerTreeDCs[i] = new BookKeepingPerTreeDC(dc.realTaxaInTrees[i], this.taxaPerLevel);
+        // }
 
     }
 
     public void initialBookKeeping(){
 
+        int b = 0;
         for(int i = 0; i < this.dc.realTaxaComponents.length; ++i){
             Component p = this.dc.realTaxaComponents[i];
-            p.data = new Data();
-            p.data.branch = new Branch(this.taxaPerLevel.dummyTaxonCount);
+            // p.data = new Data();
+            p.initializeDataListForEachInternalNode(
+                this.taxaPerLevel.dummyTaxonCount
+            );
+            // p.data.branch = new Branch(this.taxaPerLevel.dummyTaxonCount);
 
-            if(this.taxaPerLevel.isInDummyTaxa(i)){
-                int dtid = this.taxaPerLevel.inWhichDummyTaxa(i);
-                int partition = this.taxaPerLevel.inWhichPartitionDummyTaxonByIndex(dtid);
-                p.data.branch.dummyTaxaWeightsIndividual[dtid] = this.taxaPerLevel.getWeight(i);
-                p.data.branch.totalTaxaCounts[partition] += this.taxaPerLevel.getWeight(i);
+            // if(this.taxaPerLevel.isInDummyTaxa(i)){
+            //     int dtid = this.taxaPerLevel.inWhichDummyTaxa(i);
+            //     int partition = this.taxaPerLevel.inWhichPartitionDummyTaxonByIndex(dtid);
+            //     p.data.branch.dummyTaxaWeightsIndividual[dtid] = this.taxaPerLevel.getWeight(i);
+            //     p.data.branch.totalTaxaCounts[partition] += this.taxaPerLevel.getWeight(i);
 
-            }
-            else{
-                int partition = this.taxaPerLevel.inWhichPartition(i);
-                p.data.branch.realTaxaCounts[partition] = 1;
-                p.data.branch.totalTaxaCounts[partition] = 1;
-            }
+            // }
+            // else{
+            //     int partition = this.taxaPerLevel.inWhichPartition(i);
+            //     p.data.branch.realTaxaCounts[partition] = 1;
+            //     p.data.branch.totalTaxaCounts[partition] = 1;
+            // }
 
         }
-        this.dc.sentinel.data = new Data();
-        this.dc.sentinel.data.branch = new Branch(this.taxaPerLevel.dummyTaxonCount);
+        // this.dc.sentinel.data = new Data();
+        this.dc.sentinel.initializeDataListForEachInternalNode(this.taxaPerLevel.dummyTaxonCount);
+        // this.dc.sentinel.data.branch = new Branch(this.taxaPerLevel.dummyTaxonCount);
 
         int sz = this.dc.topSortedComponents.size();
+
         for(int i = sz - 1; i >  -1; --i){
             Component p = this.dc.topSortedComponents.get(i);
             if(p.isLeaf){
                 continue;
             }
             else{
-                p.data = new Data();
-                p.data.branch = new Branch(this.taxaPerLevel.dummyTaxonCount);
-                for(Component child : p.children){
-                    p.data.branch.addToSelf(child.data.branch);
-                }
+                p.initializeDataListForEachInternalNode(
+                    this.taxaPerLevel.dummyTaxonCount
+                );
+                // p.data = new Data();
+                // p.data.branch = new Branch(this.taxaPerLevel.dummyTaxonCount);
+                // for(Component child : p.children){
+                //     p.data.branch.addToSelf(child.data.branch);
+                // }
             }
         }
 
         for(InternalNode p : this.dc.internalNodes){
-            Branch[] childs = new Branch[p.childs.length];
-            for(int i = 0; i < p.childs.length; ++i){
-                childs[i] = p.childs[i].data.branch;
+            Branch[] childs = p.getBranchesOfChilds();
+
+            // adjust dummy taxa weights in case of absent taxa in this internal node
+
+            double[] weights = new double[this.taxaPerLevel.allRealTaxaCount];
+            for(var dt : this.taxaPerLevel.dummyTaxa){
+                dt.calcDivCoeffsWithAbsentTaxa(Config.SCORE_NORMALIZATION_TYPE, weights, 1, p.realTaxaPresent);
             }
+            for(var x : this.taxaPerLevel.realTaxa){
+                weights[x.id] = 1;
+            }
+
+            for(int i = 0; i < p.childs.length; ++i){
+                childs[i].calculateAllFromListOfTaxa(
+                    p.childs[i].realTaxaInComponent,
+                    weights, taxaPerLevel
+                );
+            }
+
+            Branch parentBranch = p.getBranchOfParent();
+            parentBranch.calculateAllFromListOfTaxa(
+                p.parent.realTaxaInComponent,
+                weights, taxaPerLevel
+            );
+
 
             if(p.childs.length > 2){
                 // p.scoreCalculator = new NumSatCalculatorNodeEDC(b,this.taxaPerLevel.dummyTaxonPartition);
@@ -97,7 +126,7 @@ public class BookKeepingPerLevelDC {
                 // if(p.count != p.parentSpeciationCount){
                 //     System.out.println("=================");
                 // }
-                p.scoreCalculator = new NumSatSQBin2(childs, p.parent.data.branch, this.taxaPerLevel.dummyTaxonPartition, p.count);
+                p.scoreCalculator = new NumSatSQBin2(childs, parentBranch, this.taxaPerLevel.dummyTaxonPartition, p.count);
             }
         }
     }
@@ -277,49 +306,49 @@ public class BookKeepingPerLevelDC {
 
 
 
-    public void batchTrasferRealTaxon(ArrayList<Integer> realTaxonIndices){
-        ArrayList<Integer> currPartitions = new ArrayList<>();
-        ArrayList<Integer> realTaxonIds = new ArrayList<>();
+    // public void batchTrasferRealTaxon(ArrayList<Integer> realTaxonIndices){
+    //     ArrayList<Integer> currPartitions = new ArrayList<>();
+    //     ArrayList<Integer> realTaxonIds = new ArrayList<>();
 
-        for(int i = 0; i < realTaxonIndices.size(); ++i){
-            int index = realTaxonIndices.get(i);
-            int partition = this.taxaPerLevel.inWhichPartitionRealTaxonByIndex(index);
-            currPartitions.add(partition);
-            realTaxonIds.add(this.taxaPerLevel.realTaxa[index].id);
-        }
+    //     for(int i = 0; i < realTaxonIndices.size(); ++i){
+    //         int index = realTaxonIndices.get(i);
+    //         int partition = this.taxaPerLevel.inWhichPartitionRealTaxonByIndex(index);
+    //         currPartitions.add(partition);
+    //         realTaxonIds.add(this.taxaPerLevel.realTaxa[index].id);
+    //     }
         
 
-        for(BookKeepingPerTreeDC bkpt : this.bookKeepingPerTreeDCs){
-            bkpt.batchTranserRealTaxon(realTaxonIds, currPartitions);
-        }
+    //     for(BookKeepingPerTreeDC bkpt : this.bookKeepingPerTreeDCs){
+    //         bkpt.batchTranserRealTaxon(realTaxonIds, currPartitions);
+    //     }
 
-        Queue<Utility.Pair<Component, Integer>> q = new ArrayDeque<>();
+    //     Queue<Utility.Pair<Component, Integer>> q = new ArrayDeque<>();
 
-        for(Integer rtId : realTaxonIds){
-            q.add(new Utility.Pair<Component,Integer>(this.dc.realTaxaComponents[rtId], this.taxaPerLevel.inWhichPartition(rtId)));
-        }
+    //     for(Integer rtId : realTaxonIds){
+    //         q.add(new Utility.Pair<Component,Integer>(this.dc.realTaxaComponents[rtId], this.taxaPerLevel.inWhichPartition(rtId)));
+    //     }
 
-        Set<InternalNode> st = new HashSet<>();
+    //     Set<InternalNode> st = new HashSet<>();
 
-        while(!q.isEmpty()){
-            var f = q.poll();
-            for(InternalNodeWithIndex p : f.first.partOfInternalNodes){
-                p.internalNode.cumulateTransfer(p.index, f.second);
-                st.add(p.internalNode);
-            }
-            for(var x : f.first.parents){
-                q.add(new Utility.Pair<Component, Integer>(x, f.second));
-            }
-            // q.addAll(f.parents);
-        }
+    //     while(!q.isEmpty()){
+    //         var f = q.poll();
+    //         for(InternalNodeWithIndex p : f.first.partOfInternalNodes){
+    //             p.internalNode.cumulateTransfer(p.index, f.second);
+    //             st.add(p.internalNode);
+    //         }
+    //         for(var x : f.first.parents){
+    //             q.add(new Utility.Pair<Component, Integer>(x, f.second));
+    //         }
+    //         // q.addAll(f.parents);
+    //     }
 
-        for(var x : st){
-            x.batchTransfer();
-        }
+    //     for(var x : st){
+    //         x.batchTransfer();
+    //     }
 
-        this.taxaPerLevel.batchTransferRealTaxon(realTaxonIndices);
+    //     this.taxaPerLevel.batchTransferRealTaxon(realTaxonIndices);
 
-    }
+    // }
 
 
     public void transferRealTaxon(int index){
@@ -389,7 +418,10 @@ public class BookKeepingPerLevelDC {
             //     }
             // }
             q.addAll(f.parents);
-            f.data.branch.swapRealTaxa(partition);
+            // f.data.branch.swapRealTaxa(partition);
+            for (var data : f.dataList) {
+                data.branch.swapRealTaxa(partition);
+            }
         }
     }
 
@@ -412,7 +444,11 @@ public class BookKeepingPerLevelDC {
         DummyTaxon dt = this.taxaPerLevel.dummyTaxa[index];
 
         for(RealTaxon rt : dt.flattenedRealTaxa){
-            this.dc.realTaxaComponents[rt.id].data.branch.swapDummyTaxon(index, partition);
+            // this.dc.realTaxaComponents[rt.id].data.branch.swapDummyTaxon(index, partition);
+            var component = this.dc.realTaxaComponents[rt.id];
+            for (var data : component.dataList) {
+                data.branch.swapDummyTaxon(index, partition);
+            }
             for(Component p : this.dc.realTaxaComponents[rt.id].parents){
                 if(st.add(p)){
                     q.add(p);
@@ -422,7 +458,10 @@ public class BookKeepingPerLevelDC {
 
         while(!q.isEmpty()){
             Component f = q.poll();
-            f.data.branch.swapDummyTaxon(index, partition);
+            // f.data.branch.swapDummyTaxon(index, partition);
+            for (var data : f.dataList) {
+                data.branch.swapDummyTaxon(index, partition);
+            }
             for(Component p : f.parents){
                 if(st.add(p)){
                     q.add(p);

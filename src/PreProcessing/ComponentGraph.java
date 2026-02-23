@@ -44,6 +44,9 @@ public class ComponentGraph {
         }
 
         this.sentinel = new Component(true);
+        this.sentinel.setRealTaxaInComponent(
+            new ArrayList<>()
+        );
         boolean[] realTaxaInSubTree = new boolean[taxa.length];
         this.realTaxaInComponent.put(this.sentinel, realTaxaInSubTree);
         this.stringIdToComponent.put(Utility.getComponentString(realTaxaInSubTree), this.sentinel);
@@ -268,6 +271,34 @@ public class ComponentGraph {
     }
 
 
+    boolean[] getRealTaxaInInternalNode(InternalNode internalNode){
+        boolean[] realTaxaInInternalNode = new boolean[this.taxa.length];
+        for(var child: internalNode.childs){
+            boolean[] realTaxaInChild = this.realTaxaInComponent.get(child);
+            for(int i = 0; i < this.taxa.length; ++i){
+                realTaxaInInternalNode[i] = realTaxaInInternalNode[i] || realTaxaInChild[i];
+            }
+        }
+        if (internalNode.parent != null){
+            boolean[] realTaxaInParent = this.realTaxaInComponent.get(internalNode.parent);
+            for(int i = 0; i < this.taxa.length; ++i){
+                realTaxaInInternalNode[i] = realTaxaInInternalNode[i] || realTaxaInParent[i];
+            }
+        }
+        return realTaxaInInternalNode;
+    }
+
+    public ArrayList<RealTaxon> listrealTaxaInComponent(Component c){
+        ArrayList<RealTaxon> list = new ArrayList<>();
+        boolean[] realTaxaInSubTree = this.realTaxaInComponent.get(c);
+        // System.out.print("Component: ");
+        for(int i = 0; i < this.taxa.length; ++i){
+            if(realTaxaInSubTree[i]){
+                list.add(this.taxa[i]);
+            }
+        }
+        return list;
+    }
 
 
 }

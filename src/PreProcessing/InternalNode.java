@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import src.ScoreCalculator.NumSatSQ;
+import src.Tree.Branch;
 
 public class InternalNode {
 
@@ -15,6 +16,13 @@ public class InternalNode {
     public int count;
     public NumSatSQ scoreCalculator;
 
+    public boolean[] realTaxaPresent;
+
+    public int[] childrenIndicesInComponent;
+    public int parentIndexInComponent;
+
+
+
     public InternalNode(Component[] childs, Component parent){
         this.childs = childs;
         this.parent = parent;
@@ -22,23 +30,41 @@ public class InternalNode {
         this.count = 1;
         this.scoreCalculator = null;
 
+        this.realTaxaPresent = null;
 
+        this.childrenIndicesInComponent = new int[childs.length];
 
         if(childs.length > 2){
             System.out.println("polytomy");
         }
         for(int i = 0; i < childs.length; ++i){
-            childs[i].addInternalNode(this, i);
+            this.childrenIndicesInComponent[i] = childs[i].addInternalNode(this, i);
         }
 
-        parent.addInternalNode(this, 2);
+        this.parentIndexInComponent = parent.addInternalNode(this, 2);
 
         // this.netTranser = new int[childCompsCommon.length];
 
     }
 
+    public Branch[] getBranchesOfChilds(){
+        Branch[] branches = new Branch[this.childs.length];
+        for(int i = 0; i < this.childs.length; ++i){
+            branches[i] = this.childs[i].dataList.get(this.childrenIndicesInComponent[i]).branch;
+        }
+        return branches;
+    }
+
+    public Branch getBranchOfParent(){
+        return this.parent.dataList.get(this.parentIndexInComponent).branch;
+    }
+
     public void increaseCount(){
         this.count++;
+    }
+
+    public void setRealTaxaPresent(boolean[] realTaxaInChilds){
+        this.realTaxaPresent = realTaxaInChilds;
     }
     
     

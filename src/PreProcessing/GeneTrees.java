@@ -126,8 +126,28 @@ public class GeneTrees {
         scanner.close();
 
         
+        
+
+        
+        // sort the taxa by their labels to assign consistent IDs
+        // if the taxa are numeric labels, then sort them in numeric order
+        boolean allNumeric = true;
+        for (String taxon : taxaSet) {
+            if (!taxon.matches("\\d+")) {
+                allNumeric = false;
+                break;
+            }
+        }
+        ArrayList<String> sortedTaxa = new ArrayList<>(taxaSet);
+        if (allNumeric) {
+            sortedTaxa.sort((a, b) -> Integer.compare(Integer.parseInt(a), Integer.parseInt(b)));
+        } else {
+            sortedTaxa.sort((a, b) -> a.compareTo(b));
+        }
+
+
         this.taxaMap = new HashMap<>();
-        for(var x : taxaSet){
+        for(var x : sortedTaxa){
             RealTaxon taxon = new RealTaxon(x);
             taxaMap.put(x, taxon);
         }
@@ -137,9 +157,9 @@ public class GeneTrees {
         this.taxa = new RealTaxon[this.taxaMap.size()];
         this.realTaxaCount = this.taxaMap.size();
 
-        for(var x : this.taxaMap.entrySet()){
-            taxonIdToLabel[x.getValue().id] = x.getKey();
-            taxa[x.getValue().id] = x.getValue();
+        for(var x : sortedTaxa){
+            taxonIdToLabel[taxaMap.get(x).id] = x;
+            taxa[taxaMap.get(x).id] = taxaMap.get(x);
         }
 
         return taxaMap;
@@ -262,6 +282,24 @@ public class GeneTrees {
         dataContainer.internalNodes = internalNodes.nodes;
         dataContainer.topSortedComponents = compGraph.getTopSortedNodes();
 
+        for (var comp : compGraph.components){
+            comp.setRealTaxaInComponent(
+                compGraph.listrealTaxaInComponent(comp)
+            );
+        }
+
+        for (var comp : compGraph.taxaPartitionNodes){
+            comp.setRealTaxaInComponent(
+                compGraph.listrealTaxaInComponent(comp)
+            );
+        }
+
+        for (var node : dataContainer.internalNodes){
+            node.setRealTaxaPresent(
+                compGraph.getRealTaxaInInternalNode(node)
+            );
+        }
+
         // System.out.println("================ comps ===================");
         // for(var x : compGraph.components){
         //     System.out.println(x);
@@ -296,6 +334,7 @@ public class GeneTrees {
         }
         dataContainer.taxa = this.taxa;
         dataContainer.sentinel = compGraph.getSentinel();
+        
 
         System.out.println("Comp graph nodes count : " + compGraph.count);
         System.out.println("Internal nodes count : " + internalNodes.nodes.size());
@@ -384,7 +423,7 @@ public class GeneTrees {
                     for(int j = 0; j < node.childs.size(); ++j){
                         childComps[j] = node.childs.get(j).childComponent;
                     }
-                    var x = internalNodes.addInternalNode(childComps, node.speciationParentComponent);
+                    internalNodes.addInternalNode(childComps, node.speciationParentComponent);
                     
                     // System.out.println( "node : " + node.index + " partition: " + x);
                 }
