@@ -15,14 +15,11 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        // String inputFilePath = "input/gtree_11tax_est_5genes_R1.tre";
-        // String consensusFilePath = "input/gtree_11tax_est_5genes_R1.tre-cleaned-cons.greedy.tree";
-        // String outputFilePath = "input/output.tre";
-
-        String inputFilePath = "input/01/e100-disco-rooted-cleaned.tre";
-        String consensusFilePath = "input/01/e100-consensus.greedy.tree";
-        String outputFilePath = "input/output.tre";
-
+        String inputFilePath = "";
+        String consensusFilePath = "";
+        String outputFilePath = "";
+        
+        Config.USE_EXTERNAL_TAGGING = false;
 
 
         // if(args.length < 3){
@@ -45,6 +42,18 @@ public class Main {
         inputFilePath = args[0];
         consensusFilePath = args[1];
         outputFilePath = args[2];
+
+        if(args.length >= 4){
+            String useExternalTagging = args[3];
+            if(useExternalTagging.equals("true")){
+                Config.USE_EXTERNAL_TAGGING = true;
+            }else if(useExternalTagging.equals("false")){
+                Config.USE_EXTERNAL_TAGGING = false;
+            }else{
+                System.out.println("Specify use external tagging as true or false");
+                System.exit(-1);
+            }
+        }
         // String nonQuartetType = args[3];
         
         // if(nonQuartetType.equals("A")){

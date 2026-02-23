@@ -25,6 +25,49 @@ public class GeneTrees {
     public int realTaxaCount;
     public String path;
 
+        private void parseTaxaWithDuplicationMarker(String newickLine, Set<String> taxaSet){
+        newickLine.replaceAll("\\s", "");
+    
+        int n =  newickLine.length();
+    
+        int i = 0, j = 0;
+    
+        while(i < n){
+            char curr = newickLine.charAt(i);
+            if(curr == '('){
+            }
+            else if(curr == ')'){
+                if(i + 1 < n && newickLine.charAt(i + 1) == 'D'){
+                    ++i;
+                }
+            }
+            else if(curr == ',' || curr == ';'){
+    
+            }
+            else{
+                StringBuilder taxa = new StringBuilder();
+                j = i;
+                while(j < n){
+                    char curr_j = newickLine.charAt(j);
+                    if(curr_j == ')' || curr_j == ','){
+                        String label = taxa.toString();
+                        taxaSet.add(label);
+                        break;
+                    }
+                    taxa.append(curr_j);
+                    ++j;
+                }
+                if(j == n){
+                    String label = taxa.toString();
+                    taxaSet.add(label);
+                }
+                i = j - 1;
+            }
+            ++i;
+        }
+    }
+    
+
 
     private void parseTaxa(String newickLine, Set<String> taxaSet){
         newickLine.replaceAll("\\s", "");
@@ -73,7 +116,12 @@ public class GeneTrees {
         while(scanner.hasNextLine()){
             String line = scanner.nextLine();
             if(line.trim().length() == 0) continue;
-            parseTaxa(line, taxaSet);
+            if(Config.USE_EXTERNAL_TAGGING){
+                parseTaxaWithDuplicationMarker(line, taxaSet);
+            }
+            else{
+                parseTaxa(line, taxaSet);
+            }
         }
         scanner.close();
 
@@ -142,7 +190,9 @@ public class GeneTrees {
             // }
 
             tree.calculateFrequencies(triPartitions);
-            tree.tag();
+            if(!Config.USE_EXTERNAL_TAGGING){
+                tree.tag();
+            }
             geneTrees.add(tree);
 
             // tree.generateQuartets(quartestsList);
