@@ -81,17 +81,18 @@ INPUT_BASENAME="$(basename "$INPUT_FILE" | sed 's/\.[^.]*$//')"
 OUTPUT_ABS="$(cd "$(dirname "$OUTPUT_FILE")" 2>/dev/null || mkdir -p "$(dirname "$OUTPUT_FILE")" && cd "$(dirname "$OUTPUT_FILE")" && pwd)/$(basename "$OUTPUT_FILE")"
 
 WORK_DIR="$(dirname "$OUTPUT_FILE")"
-mkdir -p "$WORK_DIR"
+INTERMEDIATE_DIR="$WORK_DIR/${INPUT_BASENAME}-wqfm-files"
+mkdir -p "$WORK_DIR" "$INTERMEDIATE_DIR"
 
-GT_CLEANED="$WORK_DIR/${INPUT_BASENAME}-cleaned.tre"
+GT_CLEANED="$INTERMEDIATE_DIR/${INPUT_BASENAME}-cleaned.tre"
 GT_RESOLVED_RAW="${GT_CLEANED}.resolved"
-GT_RESOLVED="$WORK_DIR/${INPUT_BASENAME}-resolved.tre"
+GT_RESOLVED="$INTERMEDIATE_DIR/${INPUT_BASENAME}-resolved.tre"
 
-DISCO_DECOMP="$WORK_DIR/${INPUT_BASENAME}-disco-decomp.tre"
-DISCO_DECOMP_CLEANED="$WORK_DIR/${INPUT_BASENAME}-disco-decomp-cleaned.tre"
-DISCO_NO_DECOMP="$WORK_DIR/${INPUT_BASENAME}-disco-rooted.tre"
-DISCO_NO_DECOMP_CLEANED="$WORK_DIR/${INPUT_BASENAME}-disco-rooted-cleaned.tre"
-CONSENSUS_PREFIX="$WORK_DIR/${INPUT_BASENAME}-consensus"
+DISCO_DECOMP="$INTERMEDIATE_DIR/${INPUT_BASENAME}-disco-decomp.tre"
+DISCO_DECOMP_CLEANED="$INTERMEDIATE_DIR/${INPUT_BASENAME}-disco-decomp-cleaned.tre"
+DISCO_NO_DECOMP="$INTERMEDIATE_DIR/${INPUT_BASENAME}-disco-rooted.tre"
+DISCO_NO_DECOMP_CLEANED="$INTERMEDIATE_DIR/${INPUT_BASENAME}-disco-rooted-cleaned.tre"
+CONSENSUS_PREFIX="$INTERMEDIATE_DIR/${INPUT_BASENAME}-consensus"
 CONSENSUS_TREE="${CONSENSUS_PREFIX}.greedy.tree"
 
 # ---------------------------------------------------------------------------
@@ -114,8 +115,9 @@ fi
 # Pipeline
 # ---------------------------------------------------------------------------
 echo "=== wQFM-GDL Pipeline ==="
-echo "Input gene trees : $INPUT_FILE"
-echo "Output species tree: $OUTPUT_FILE"
+echo "Input gene trees    : $INPUT_FILE"
+echo "Output species tree : $OUTPUT_FILE"
+echo "Intermediate files  : $INTERMEDIATE_DIR"
 echo ""
 
 # Step 1 — Clean raw input gene trees
@@ -163,9 +165,9 @@ echo "[6/9] Generating greedy consensus tree (PAUP)..."
 perl "$SCRIPT_DIR/scripts/run_paup_consensus.pl" \
     -i "$DISCO_DECOMP_CLEANED" \
     -o "$CONSENSUS_PREFIX" \
-    > "$WORK_DIR/consLog.txt" 2>"$WORK_DIR/consErr.txt"
+    > "$INTERMEDIATE_DIR/consLog.txt" 2>"$INTERMEDIATE_DIR/consErr.txt"
 if [[ $? -ne 0 ]]; then
-    echo "Error: PAUP consensus generation failed. See '$WORK_DIR/consErr.txt'."
+    echo "Error: PAUP consensus generation failed. See '$INTERMEDIATE_DIR/consErr.txt'."
     exit 1
 fi
 
