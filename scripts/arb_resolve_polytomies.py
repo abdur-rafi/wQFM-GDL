@@ -27,7 +27,7 @@ if __name__ == '__main__':
     
     trees = dendropy.TreeList.get_from_path(treeName, 'newick',rooting='force-rooted')
     for tree in trees:            
-        print(".")
+        # print(".")
         tree.resolve_polytomies()     
     
     	

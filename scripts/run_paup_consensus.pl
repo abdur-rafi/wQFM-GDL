@@ -39,22 +39,18 @@ printUsage() unless(defined($output_prefix));
 print STDERR "warning: please limit length of filenames\n";
 
 my $nexus_file = "$output_prefix.nexus";
-my $str_file = "$output_prefix.strict";
-my $maj_file = "$output_prefix.majority";
 my $gre_file = "$output_prefix.greedy";
 my $paup_file = "$output_prefix.paup";
 
-write_paup_file($gt_file, $nexus_file, $paup_file, $str_file, $maj_file, $gre_file);
+write_paup_file($gt_file, $nexus_file, $paup_file, $gre_file);
 run_paup($paup_file);
-my $str_file_newick = convert_nexus_to_newick($str_file);
-my $maj_file_newick = convert_nexus_to_newick($maj_file);
 my $gre_file_newick = convert_nexus_to_newick($gre_file);
 
-print "output at:\n$str_file_newick\n$maj_file_newick\n$gre_file_newick\n";
+print "output at:\n$gre_file_newick\n";
 print "done.\n";
 
 sub write_paup_file {
- my ($gt_file, $nexus_file, $paup_file, $str_file, $maj_file, $gre_file) = @_;
+ my ($gt_file, $nexus_file, $paup_file, $gre_file) = @_;
  convert_newick_to_nexus($gt_file, $nexus_file);
 
  my @taxa_list;
@@ -74,8 +70,6 @@ begin paup;
         set criterion = parsimony;
         set increase = auto;
         gettrees file = $nexus_file allblocks = yes warntree = no unrooted = yes;
-        contree all / strict = yes treefile = $str_file replace;
-        contree all / strict = no majrule = yes treefile = $maj_file replace;
         contree all / strict = no majrule = yes le50 = yes treefile = $gre_file replace;
 end;
 
