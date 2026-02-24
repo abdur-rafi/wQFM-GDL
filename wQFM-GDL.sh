@@ -103,11 +103,14 @@ if ! command -v java &>/dev/null; then
     exit 1
 fi
 
-WQFM_CLASSPATH="$SCRIPT_DIR/bin"
+WQFM_JAR="$SCRIPT_DIR/wQFM-GDL-v1.0.0.jar"
 
-if [[ ! -d "$WQFM_CLASSPATH/src" ]]; then
-    echo "Error: Compiled classes not found at '$WQFM_CLASSPATH'."
-    echo "Please compile the Java sources first: javac -d bin \$(find src -name '*.java')"
+if [[ ! -f "$WQFM_JAR" ]]; then
+    echo "Error: JAR file not found at '$WQFM_JAR'."
+    echo "Please build it first:"
+    echo "  javac -d bin \$(find src -name '*.java')"
+    echo "  echo 'Main-Class: src.Main' > manifest.txt"
+    echo "  jar cfm wQFM-GDL-v1.0.0.jar manifest.txt -C bin ."
     exit 1
 fi
 
@@ -189,7 +192,7 @@ fi
 
 # Step 9 — wQFM-GDL species tree inference
 echo "[9/9] Running wQFM-GDL species tree inference..."
-java -cp "$WQFM_CLASSPATH" src.Main \
+java -jar "$WQFM_JAR" \
     "$DISCO_NO_DECOMP_CLEANED" \
     "$CONSENSUS_TREE" \
     "$OUTPUT_FILE"
