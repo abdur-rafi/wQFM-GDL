@@ -19,6 +19,7 @@ public class TreeNode implements TreePrinter.PrintableNode {
     public Info info;
     
     public double weight;
+    public boolean[] realTaxaInSubtree;
 
     // public Component subTreeComponent;
     // public Component parentComponent;

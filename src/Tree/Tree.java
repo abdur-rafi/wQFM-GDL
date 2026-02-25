@@ -2,12 +2,12 @@ package src.Tree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import src.Config;
 import src.Quartets.QuartestsList;
 import src.Quartets.Quartet;
 import src.Taxon.RealTaxon;
@@ -164,128 +164,6 @@ public class Tree {
 
     }
 
-    private void parseFromNewickWithDuplication(String newickLine){
-
-        // Map<String, RealTaxon> taxaMap = new HashMap<>();
-        int leavesCount = 0;
-
-        nodes = new ArrayList<>();
-    
-        Stack<TreeNode> nodes = new Stack<>();
-        newickLine = newickLine.replaceAll("\\s", "");
-    
-        int n = newickLine.length();
-    
-        int i = 0, j = 0;
-    
-        while(i < n){
-            char curr = newickLine.charAt(i);
-            if(curr == '('){
-                nodes.push(null);
-            }
-            else if(curr == ')'){
-                ArrayList<TreeNode> arr = new ArrayList<>();
-                while( !nodes.isEmpty() && nodes.peek() != null){
-                    arr.add(nodes.pop());
-                }
-                if(!nodes.isEmpty())
-                    nodes.pop();
-                TreeNode newInternalNode = addInternalNode(arr);
-                
-                // Check if the next character is 'D' (duplication marker)
-                if(i + 1 < n && newickLine.charAt(i + 1) == 'D'){
-                    newInternalNode.dupplicationNode = true;
-                    i++; // Skip the 'D' character
-                }
-                
-                nodes.push(newInternalNode);
-                
-            }
-            else if(curr == ',' || curr == ';'){
-    
-            }
-            else{
-                StringBuilder taxa = new StringBuilder();
-                j = i;
-                TreeNode newNode = null;
-                while(j < n){
-                    char curr_j = newickLine.charAt(j);
-                    if(curr_j == ')' || curr_j == ','){
-                        RealTaxon taxon;
-                        // if(this.taxaMap != null){
-                            taxon = this.taxaMap.get(taxa.toString());
-                        // }
-                        // else{
-                        //     taxon = new RealTaxon(taxa.toString());
-                        //     taxaMap.put(taxon.label, taxon);
-                        // }   
-                        newNode = addLeaf(taxon);
-                        leavesCount++;
-
-                        break;
-                    }
-                    taxa.append(curr_j);
-                    ++j;
-                }
-                if(j == n){
-                    leavesCount++;
-                    RealTaxon taxon;
-                    // if(this.taxaMap != null){
-                        taxon = this.taxaMap.get(taxa.toString());
-                    // }
-                    // else{
-                    //     taxon = new RealTaxon(taxa.toString());
-                    //     taxaMap.put(taxon.label, taxon);
-                    // }   
-                    newNode = addLeaf(taxon);
-                }
-                i = j - 1;
-                nodes.push(newNode);
-            }
-            ++i;
-        }
-
-        // if(this.taxaMap == null)
-        //     this.taxaMap = taxaMap;
-
-        // this.leavesCount = this.taxaMap.size();
-        this.leavesCount = leavesCount;
-
-        for(var x : nodes){
-            if(x.isLeaf()){
-                this.taxaInTreeIds.add(x.taxon.id);
-            }
-        }
-    
-        root = nodes.lastElement();
-        
-        if(root.childs.size() > 2){
-            // System.out.println(newickLine);
-            // System.out.println("laksjdfljkd");
-            balanceRoot();
-        }
-        
-        
-        // filterLeaves();
-        topSort();
-
-        // System.out.println(this.leavesCount);
-        // for( i = 0; i < this.leaves.length; ++i){
-        //     if(this.leaves[i] == null){
-        //         System.out.println("Error: Taxon " + i + " is not present in tree");
-        //         System.exit(-1);
-        //     }
-        //     if(this.leaves[i].taxon.id != i){
-        //         System.out.println("Error: Taxon " + i + " not matching");
-        //         System.exit(-1);
-        //     }
-        // }
-        // bringLeafsToFront();
-
-
-
-    }
-
     // private void filterLeaves(){
     //     this.leaves = new TreeNode[this.taxaMap.size()];
     //     for(var x : nodes){
@@ -354,12 +232,7 @@ public class Tree {
     public Tree(String newickLine, Map<String, RealTaxon> taxaMap){
         this.taxaMap = taxaMap;
         this.taxaInTreeIds = new HashSet<>();
-        if(Config.USE_EXTERNAL_TAGGING){
-            parseFromNewickWithDuplication(newickLine);
-        }
-        else{
-            parseFromNewick(newickLine);
-        }
+        parseFromNewick(newickLine);
     }
 
     public Tree(){
@@ -623,11 +496,11 @@ public class Tree {
     }
 
 
-    private ArrayList<Pair<Integer, Integer>> getPairs(int[] c){
+    private ArrayList<Pair<Integer, Integer>> getPairs(boolean[] c){
         ArrayList<Pair<Integer, Integer>> pairs = new ArrayList<>();
         for(int i = 0; i < c.length; ++i){
             for(int j = i + 1; j < c.length; ++j){
-                if(c[i] > 0 && c[j] > 0){
+                if(c[i] && c[j]){
                     pairs.add(new Pair<>(i, j));
                 }
             }
@@ -635,13 +508,13 @@ public class Tree {
         return pairs;
     }
 
-    private ArrayList<Pair<Integer, Integer>> getCrossPairs(int[] c1, int[] c2){
+    private ArrayList<Pair<Integer, Integer>> getCrossPairs(boolean[] c1, boolean[] c2){
         ArrayList<Pair<Integer, Integer>> pairs = new ArrayList<>();
         boolean[][] pairSet = new boolean[c1.length][c2.length];
 
         for(int i = 0; i < c1.length; ++i){
             for(int j = 0; j < c2.length; ++j){
-                if(c1[i] == 0 || c2[j] == 0 || i == j)
+                if(!c1[i] || !c2[j]  || i == j)
                     continue;
 
                 int mn = Math.min(i, j);
@@ -679,59 +552,57 @@ public class Tree {
         }
     }
 
-    private int[] generateQuartetsUtil(TreeNode node, int[] taxaInTree){
 
-        int[] taxaInSubtree = new int[this.taxaMap.size()];
+    private boolean[] getParents(TreeNode node){
+        boolean[] parents = new boolean[this.taxaMap.size()];
+        while(node.parent != null){
+            if(!node.parent.dupplicationNode){
+                var otherChild = node.parent.childs.get(0) == node ? node.parent.childs.get(1) : node.parent.childs.get(0);
+                for(int i = 0; i < this.taxaMap.size(); ++i){
+                    parents[i] |= otherChild.realTaxaInSubtree[i];
+                }
+            }
+            node = node.parent;
+        }
+        return parents;
+    }
+
+    private void generateQuartetsUtil(TreeNode node){
+
 
         if(node.isLeaf()){
-            taxaInSubtree[node.taxon.id] = 1;
-            return taxaInSubtree;
-        }
-        
-        int[] c0 = generateQuartetsUtil(node.childs.get(0), taxaInTree);
-        int[] c1 = generateQuartetsUtil(node.childs.get(1), taxaInTree);
-        int[] parent = new int[this.taxaMap.size()];
-
-        for(int i = 0; i < this.taxaMap.size(); ++i){
-            taxaInSubtree[i] = c0[i] + c1[i];
-            parent[i] = taxaInTree[i] - c0[i] - c1[i];
+            return;
         }
 
-        if(node.dupplicationNode){
-            return taxaInSubtree;
-        }
+        if(!node.dupplicationNode){
 
-        // boolean[][][][] qMap = new boolean[this.taxaMap.size()][this.taxaMap.size()][this.taxaMap.size()][this.taxaMap.size()];
+            Set<String> qSet = new HashSet<>();
 
-        Set<String> qSet = new HashSet<>();
-
-        var pairsc0 = getPairs(c0);
-        var pairsc1 = getPairs(c1);
-        
-        generateQuartetsFromPairs(pairsc0, pairsc1, qSet);
-        
-
-        if(node.parent != null && !node.parent.dupplicationNode){
-            var pairsparentc0 = getCrossPairs(parent, c0);
-            var pairsparentc1 = getCrossPairs(parent, c1);
+            var c0 = node.childs.get(0).realTaxaInSubtree;
+            var c1 = node.childs.get(1).realTaxaInSubtree;
     
-            generateQuartetsFromPairs(pairsc0, pairsparentc1, qSet);
     
-            generateQuartetsFromPairs(pairsc1, pairsparentc0, qSet);
-
+            var pairsc0 = getPairs(c0);
+            var pairsc1 = getPairs(c1);
+            
+            generateQuartetsFromPairs(pairsc0, pairsc1, qSet);
+            
+    
+            if(node.parent != null ){
+                var parent = getParents(node);
+                var pairsparentc0 = getCrossPairs(parent, c0);
+                var pairsparentc1 = getCrossPairs(parent, c1);
+        
+                generateQuartetsFromPairs(pairsc0, pairsparentc1, qSet);
+        
+                generateQuartetsFromPairs(pairsc1, pairsparentc0, qSet);
+    
+            }
         }
 
-
-        // for(var child : node.childs){
-
-        //     var childTaxa = generateQuartetsUtil(child);
-        //     for(int i = 0; i < this.taxaMap.size(); ++i){
-        //         if(childTaxa[i]){
-        //             taxaInSubtree[i] = true;
-        //         }
-        //     }
-        // }
-        return taxaInSubtree;
+        for(var x : node.childs){
+            generateQuartetsUtil(x);
+        }
     } 
 
     public void generateQuartets(QuartestsList quartestsList){
@@ -749,10 +620,35 @@ public class Tree {
 
         this.qList = quartestsList;
 
-        generateQuartetsUtil(root, taxaInTree);
+        calcRealTaxaInSubTree(root);
+
+        generateQuartetsUtil(root);
 
 
 
     }
+
+    private boolean[] calcRealTaxaInSubTree(TreeNode node){
+
+        boolean[] taxaInSubtree = new boolean[this.taxaMap.size()];
+
+        if(node.isLeaf()){
+            taxaInSubtree[node.taxon.id] = true;
+            node.realTaxaInSubtree = taxaInSubtree;
+            return taxaInSubtree;
+        }
+        
+        boolean[] c0 = calcRealTaxaInSubTree(node.childs.get(0));
+        boolean[] c1 = calcRealTaxaInSubTree(node.childs.get(1));
+
+        for(int i = 0; i < this.taxaMap.size(); ++i){
+            taxaInSubtree[i] = c0[i] || c1[i];
+        }
+
+        node.realTaxaInSubtree = taxaInSubtree;
+
+        return taxaInSubtree;
+    } 
+    
 
 }

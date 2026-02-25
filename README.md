@@ -33,8 +33,117 @@ Output file contains the estimated species tree in the Newick format.
 
 ## Quick Start
 
+### Basic Usage
+
+wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeline from gene trees to species tree. The script supports two modes:
+
+**wQFM-GDL-T (Tree-based)**: Recommended for large-scale datasets (100+ taxa)
+```bash
+bash wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -t
+```
+
+**wQFM-GDL-Q (Quartet-based)**: Sometimes more accurate for small-to-moderate datasets where quartet enumeration is feasible
+```bash
+bash wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -q
+```
+
+### Options
+
+- `-i`, `--input`: Input multi-copy gene tree file (Newick format, one tree per line)
+- `-o`, `--output`: Output species tree file
+- `-t`, `--tree`: Use tree-based pipeline (wQFM-GDL-T)
+- `-q`, `--quartet`: Use quartet-based pipeline (wQFM-GDL-Q)
+- `-m`, `--memory`: Java heap size (e.g., `8g`, `16g`, `60g`). Default: JVM default
+- `-h`, `--help`: Show help message
+
+### Examples
+
+**Tree-based pipeline with 16GB memory:**
+```bash
+bash wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -t -m 16g
+```
+
+**Quartet-based pipeline with 8GB memory:**
+```bash
+bash wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -q -m 8g
+```
+
+**Using test data:**
+```bash
+bash wQFM-GDL.sh -i testData/e500.tre -o my_output.tre -t -m 8g
+```
+
+### What the script does
+
+The script automatically handles all preprocessing and pipeline steps:
+
+**wQFM-GDL-T (9 steps):**
+1. Cleans input gene trees
+2. Resolves polytomies
+3. Cleans resolved trees
+4. DISCO decomposition
+5. Cleans decomposed trees
+6. Generates greedy consensus tree (PAUP)
+7. DISCO rooting (without decomposition)
+8. Cleans rooted trees
+9. Species tree inference
+
+**wQFM-GDL-Q (7 steps):**
+1. Cleans input gene trees
+2. Resolves polytomies
+3. Cleans resolved trees
+4. DISCO rooting (without decomposition)
+5. Cleans rooted trees
+6. Generates quartets
+7. Species tree inference from quartets
+
+### Intermediate files
+
+All intermediate files are stored in `<basename>-wqfm-files/` directory next to the output file. This includes cleaned trees, resolved trees, DISCO outputs, consensus trees, and quartets (for `-q` mode).
+
 
 ## Building from source
+
+### Prerequisites
+
+- Java Development Kit (JDK) 11 or later
+- All source files are under the `src/` directory
+
+### Step 1 — Compile all sources
+
+From the repository root, compile all Java source files into the `bin/` directory:
+
+```bash
+mkdir -p bin
+javac -d bin $(find src -name "*.java")
+```
+
+### Step 2 — Build `wQFM-GDL-v1.0.0.jar` (wQFM-GDL-T)
+
+This JAR is used by the tree-based pipeline (`-t` flag). Its main class is `src.Main`.
+
+```bash
+echo "Main-Class: src.Main" > manifest-main.txt
+jar cfm wQFM-GDL-v1.0.0.jar manifest-main.txt -C bin .
+rm manifest-main.txt
+```
+
+### Step 3 — Build `QuartetGenMain.jar` (wQFM-GDL-Q)
+
+This JAR generates species-driven quartets from gene family trees and is used by the quartet-based pipeline (`-q` flag). Its main class is `src.QuartetGenMain`.
+
+```bash
+echo "Main-Class: src.QuartetGenMain" > manifest-quartet.txt
+jar cfm QuartetGenMain.jar manifest-quartet.txt -C bin .
+rm manifest-quartet.txt
+```
+
+### Verify
+
+```bash
+java -jar wQFM-GDL-v1.0.0.jar          # should print: Input file: ...
+java -jar QuartetGenMain.jar            # should print usage
+```
 
 ## Simulated Dataset
 
