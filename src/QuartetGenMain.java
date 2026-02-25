@@ -15,6 +15,8 @@ public class QuartetGenMain {
 
         GeneTrees geneTrees = new GeneTrees(path);
         geneTrees.readTaxaNames();
+        
+        // System.out.println("Found taxa: " + geneTrees.taxaMap);
 
         QuartestsList qlist = geneTrees.readGeneTreesAndGenerateQuartets();
 

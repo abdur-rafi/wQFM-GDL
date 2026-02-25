@@ -36,6 +36,47 @@ Output file contains the estimated species tree in the Newick format.
 
 ## Building from source
 
+### Prerequisites
+
+- Java Development Kit (JDK) 11 or later
+- All source files are under the `src/` directory
+
+### Step 1 — Compile all sources
+
+From the repository root, compile all Java source files into the `bin/` directory:
+
+```bash
+mkdir -p bin
+javac -d bin $(find src -name "*.java")
+```
+
+### Step 2 — Build `wQFM-GDL-v1.0.0.jar` (wQFM-GDL-T)
+
+This JAR is used by the tree-based pipeline (`-t` flag). Its main class is `src.Main`.
+
+```bash
+echo "Main-Class: src.Main" > manifest-main.txt
+jar cfm wQFM-GDL-v1.0.0.jar manifest-main.txt -C bin .
+rm manifest-main.txt
+```
+
+### Step 3 — Build `QuartetGenMain.jar` (wQFM-GDL-Q)
+
+This JAR generates species-driven quartets from gene family trees and is used by the quartet-based pipeline (`-q` flag). Its main class is `src.QuartetGenMain`.
+
+```bash
+echo "Main-Class: src.QuartetGenMain" > manifest-quartet.txt
+jar cfm QuartetGenMain.jar manifest-quartet.txt -C bin .
+rm manifest-quartet.txt
+```
+
+### Verify
+
+```bash
+java -jar wQFM-GDL-v1.0.0.jar          # should print: Input file: ...
+java -jar QuartetGenMain.jar            # should print usage
+```
+
 ## Simulated Dataset
 
 To extensively evaluate the performance under GDL on large datasets, we generated two new large-scale simulated datasets comprising 200 and 500 taxa, which we call SIM200 and SIM500, respectively. The datasets are publicly available on [**Zenodo**](https://zenodo.org/records/18605522). The simulation scripts are provided in the [Simulation Folder](https://github.com/abdur-rafi/wQFM-GDL/issues). The detailed parameters and simulation pipeline are presented in the paper.

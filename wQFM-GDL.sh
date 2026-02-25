@@ -18,8 +18,10 @@
 #   1. Clean input gene trees (treeCleaner.py)
 #   2. Resolve polytomies     (arb_resolve_polytomies.py)
 #   3. Clean resolved trees   (treeCleaner.py)
-#   4. Generate quartets      (QuartetGenMain.jar)
-#   5. Species tree inference (wQFM-v1.4.jar)
+#   4. DISCO rooting only     (disco.py --no-decomp)
+#   5. Clean rooted trees     (treeCleaner.py)
+#   6. Generate quartets      (QuartetGenMain.jar)
+#   7. Species tree inference (wQFM-v1.4.jar)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -209,17 +211,35 @@ if [[ "$MODE" == "q" ]]; then
     # wQFM-GDL-Q: quartet-based pipeline
     # -----------------------------------------------------------------------
 
-    # Step 4 — Generate quartets
-    echo "[4/5] Generating quartets..."
-    java $JAVA_OPTS -jar "$QUARTET_GEN_JAR" "$GT_RESOLVED" > "$QUARTETS_FILE"
+    # Step 4 — DISCO rooting (no decomposition)
+    echo "[4/7] Running DISCO rooting (--no-decomp)..."
+    python3 "$SCRIPT_DIR/scripts/disco.py" -i "$GT_RESOLVED" -o "$DISCO_NO_DECOMP" -d _ --no-decomp
+    if [[ $? -ne 0 ]]; then
+        echo "Error: DISCO rooting failed."
+        exit 1
+    fi
+
+    # Step 5 — Clean DISCO rooted output
+    echo "[5/7] Cleaning rooted trees..."
+    python3 "$SCRIPT_DIR/scripts/treeCleaner.py" < "$DISCO_NO_DECOMP" > "$DISCO_NO_DECOMP_CLEANED"
+    if [[ $? -ne 0 ]]; then
+        echo "Error: treeCleaner.py failed on rooted trees."
+        exit 1
+    fi
+
+    # Step 6 — Generate quartets
+    echo "[6/7] Generating quartets..."
+    java $JAVA_OPTS -jar "$QUARTET_GEN_JAR" "$DISCO_NO_DECOMP_CLEANED" > "$QUARTETS_FILE"
     if [[ $? -ne 0 ]]; then
         echo "Error: QuartetGenMain failed."
         exit 1
     fi
 
-    # Step 5 — wQFM species tree inference from quartets
-    echo "[5/5] Running wQFM species tree inference from quartets..."
-    (cd "$SCRIPT_DIR/wQFM-v1.4" && java $JAVA_OPTS -jar "wQFM-v1.4.jar" -i "$QUARTETS_FILE" -o "$OUTPUT_FILE")
+    # Step 7 — wQFM species tree inference from quartets
+    echo "[7/7] Running wQFM species tree inference from quartets..."
+    QUARTETS_FILE_ABS="$(cd "$(dirname "$QUARTETS_FILE")" && pwd)/$(basename "$QUARTETS_FILE")"
+    OUTPUT_FILE_ABS="$(cd "$(dirname "$OUTPUT_FILE")" 2>/dev/null || (mkdir -p "$(dirname "$OUTPUT_FILE")" && cd "$(dirname "$OUTPUT_FILE")") && pwd)/$(basename "$OUTPUT_FILE")"
+    (cd "$SCRIPT_DIR/wQFM-v1.4" && java $JAVA_OPTS -jar "wQFM-v1.4.jar" -i "$QUARTETS_FILE_ABS" -o "$OUTPUT_FILE_ABS")
     if [[ $? -ne 0 ]]; then
         echo "Error: wQFM quartet-based inference failed."
         exit 1
