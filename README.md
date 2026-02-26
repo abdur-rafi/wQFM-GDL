@@ -17,7 +17,7 @@ wQFM-GDL includes two variants, wQFM-GDL-Q and wQFM-GDL-T, which operate on quar
 
 ### Packages, Programming Languages and Operating Systems Requirements
 
-- Java 11+ (tested with OpenJDK 17) 
+- Java 11+ (developed using OpenJDK 17) 
 - Platform: Ubuntu Linux (developed and tested on Ubuntu but should work on other distributions)
 - Python 3, Perl
 
@@ -37,6 +37,8 @@ Output file contains the estimated species tree in the Newick format.
 
 ### Basic Usage
 
+Download and extract the '.tar.gz' or '.zip' archive from the [**Github Releases**](https://github.com/abdur-rafi/wQFM-GDL/releases).
+
 wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeline. The script supports two modes:
 
 **wQFM-GDL-T (Tree-based)**: Recommended for large-scale datasets (100+ taxa/ 1000+ genes).
@@ -44,7 +46,7 @@ wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeli
 ./wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -t
 ```
 
-**wQFM-GDL-Q (Quartet-based)**: Sometimes more accurate than wQFM-GDL-T but only applicable for small datasets where quartet enumeration is feasible.
+**wQFM-GDL-Q (Quartet-based)**: Sometimes more accurate than wQFM-GDL-T but only applicable for small datasets where quartet enumeration is feasible (<100 taxa, <1000 genes)
 ```bash
 ./wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -q
 ```
