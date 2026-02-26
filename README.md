@@ -42,7 +42,7 @@ wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeli
 bash wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -t
 ```
 
-**wQFM-GDL-Q (Quartet-based)**: Sometimes more accurate for small-to-moderate datasets where quartet enumeration is feasible
+**wQFM-GDL-Q (Quartet-based)**: Sometimes more accurate for small datasets where quartet enumeration is feasible
 ```bash
 bash wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -q
 ```
@@ -72,30 +72,6 @@ bash wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -q -m 8g
 ```bash
 bash wQFM-GDL.sh -i testData/e500.tre -o my_output.tre -t -m 8g
 ```
-
-### What the script does
-
-The script automatically handles all preprocessing and pipeline steps:
-
-**wQFM-GDL-T (9 steps):**
-1. Cleans input gene trees
-2. Resolves polytomies
-3. Cleans resolved trees
-4. DISCO decomposition
-5. Cleans decomposed trees
-6. Generates greedy consensus tree (PAUP)
-7. DISCO rooting (without decomposition)
-8. Cleans rooted trees
-9. Species tree inference
-
-**wQFM-GDL-Q (7 steps):**
-1. Cleans input gene trees
-2. Resolves polytomies
-3. Cleans resolved trees
-4. DISCO rooting (without decomposition)
-5. Cleans rooted trees
-6. Generates quartets
-7. Species tree inference from quartets
 
 ### Intermediate files
 
@@ -155,4 +131,4 @@ We are always looking to improve our codebase.
 
 For any issues, please post on [wQFM-GDL issues page](https://github.com/abdur-rafi/wQFM-GDL/issues).
 
-Alternatively, you can email at ```amsrumi@gmail.com``` or ```rafi08236@gmail.com```.
+Alternatively, you can email at ```amsrumi@gmail.com``` or ```abdurrafi403@gmail.com```.
