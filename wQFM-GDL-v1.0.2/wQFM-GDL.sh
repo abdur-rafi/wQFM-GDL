@@ -4,6 +4,7 @@
 # Usage: bash wQFM-GDL.sh -i <input_gene_trees> -o <output_species_tree>
 #
 # Pipeline (-t, wQFM-GDL-T, tree-based):
+#   0. Uniquify duplicate leaves (uniquify_leaves.py)
 #   1. Clean input gene trees (treeCleaner.py)
 #   2. Resolve polytomies     (arb_resolve_polytomies.py)
 #   3. Clean resolved trees   (treeCleaner.py)
@@ -15,6 +16,7 @@
 #   9. Species tree inference (wQFM-GDL-v1.0.0.jar)
 #
 # Pipeline (-q, wQFM-GDL-Q, quartet-based):
+#   0. Uniquify duplicate leaves (uniquify_leaves.py)
 #   1. Clean input gene trees (treeCleaner.py)
 #   2. Resolve polytomies     (arb_resolve_polytomies.py)
 #   3. Clean resolved trees   (treeCleaner.py)
@@ -116,6 +118,7 @@ WORK_DIR="$(dirname "$OUTPUT_FILE")"
 INTERMEDIATE_DIR="$WORK_DIR/${INPUT_BASENAME}-wqfm-files"
 mkdir -p "$WORK_DIR" "$INTERMEDIATE_DIR"
 
+GT_UNIQUIFIED="$INTERMEDIATE_DIR/${INPUT_BASENAME}-uniquified.tre"
 GT_CLEANED="$INTERMEDIATE_DIR/${INPUT_BASENAME}-cleaned.tre"
 GT_RESOLVED_RAW="${GT_CLEANED}.resolved"
 GT_RESOLVED="$INTERMEDIATE_DIR/${INPUT_BASENAME}-resolved.tre"
@@ -182,9 +185,18 @@ echo "Mode                : $MODE_LABEL"
 [[ -n "$HEAP_SIZE" ]] && echo "Java heap size      : $HEAP_SIZE" || echo "Java heap size      : JVM default"
 echo ""
 
-# Step 1 — Clean raw input gene trees  [common to both modes]
+# Step 0 — Uniquify duplicate leaf names if needed  [common to both modes]
+echo "[0] Preprocessing: Uniquifying duplicate leaf names if needed..."
+python3 "$SCRIPT_DIR/scripts/uniquify_leaves.py" "$INPUT_FILE" "$GT_UNIQUIFIED"
+if [[ $? -ne 0 ]]; then
+    echo "Error: uniquify_leaves.py failed."
+    exit 1
+fi
+echo ""
+
+# Step 1 — Clean preprocessed gene trees  [common to both modes]
 echo "[1] Cleaning input gene trees..."
-python3 "$SCRIPT_DIR/scripts/treeCleaner.py" < "$INPUT_FILE" > "$GT_CLEANED"
+python3 "$SCRIPT_DIR/scripts/treeCleaner.py" < "$GT_UNIQUIFIED" > "$GT_CLEANED"
 if [[ $? -ne 0 ]]; then
     echo "Error: treeCleaner.py failed on input gene trees."
     exit 1
