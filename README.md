@@ -39,12 +39,12 @@ wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeli
 
 **wQFM-GDL-T (Tree-based)**: Recommended for large-scale datasets (100+ taxa)
 ```bash
-bash wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -t
+./wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -t
 ```
 
 **wQFM-GDL-Q (Quartet-based)**: Sometimes more accurate for small datasets where quartet enumeration is feasible
 ```bash
-bash wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -q
+./wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -q
 ```
 
 ### Options
@@ -60,17 +60,17 @@ bash wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -q
 
 **Tree-based pipeline with 16GB memory:**
 ```bash
-bash wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -t -m 16g
+./wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -t -m 16g
 ```
 
 **Quartet-based pipeline with 8GB memory:**
 ```bash
-bash wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -q -m 8g
+./wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -q -m 8g
 ```
 
 **Using test data:**
 ```bash
-bash wQFM-GDL.sh -i testData/e500.tre -o my_output.tre -t -m 8g
+./wQFM-GDL.sh -i testData/e500.tre -o my_output.tre -t -m 8g
 ```
 
 ### Intermediate files
