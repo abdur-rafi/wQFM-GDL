@@ -13,7 +13,7 @@
 #   6. Greedy consensus tree  (run_paup_consensus.pl)
 #   7. DISCO rooting only     (disco.py --no-decomp)
 #   8. Clean rooted trees     (treeCleaner.py)
-#   9. Species tree inference (wQFM-GDL-v1.0.0.jar)
+#   9. Species tree inference (wQFM-GDL-v1.0.2.jar)
 #
 # Pipeline (-q, wQFM-GDL-Q, quartet-based):
 #   0. Uniquify duplicate leaves (uniquify_leaves.py)
@@ -144,7 +144,7 @@ if [[ -n "$HEAP_SIZE" ]]; then
     JAVA_OPTS="-Xmx${HEAP_SIZE}"
 fi
 
-WQFM_JAR="$SCRIPT_DIR/wQFM-GDL-v1.0.0.jar"
+WQFM_JAR="$SCRIPT_DIR/wQFM-GDL-v1.0.2.jar"
 QUARTET_GEN_JAR="$SCRIPT_DIR/QuartetGenMain.jar"
 WQFM_Q_JAR="$SCRIPT_DIR/wQFM-v1.4/wQFM-v1.4.jar"
 
@@ -154,7 +154,7 @@ if [[ "$MODE" == "t" ]]; then
         echo "Please build it first:"
         echo "  javac -d bin \$(find src -name '*.java')"
         echo "  echo 'Main-Class: src.Main' > manifest.txt"
-        echo "  jar cfm wQFM-GDL-v1.0.0.jar manifest.txt -C bin ."
+        echo "  jar cfm wQFM-GDL-v1.0.2.jar manifest.txt -C bin ."
         exit 1
     fi
 elif [[ "$MODE" == "q" ]]; then
