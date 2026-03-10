@@ -124,7 +124,7 @@ java -jar QuartetGenMain.jar            # should print usage
 
 ## Simulated Dataset
 
-To extensively evaluate the performance under GDL on large datasets, we generated two new large-scale simulated datasets comprising 200 and 500 taxa, which we call SIM200 and SIM500, respectively. The datasets are publicly available on [**Zenodo**](https://zenodo.org/records/18605522). The simulation scripts are provided in the [Simulation Folder](https://github.com/abdur-rafi/wQFM-GDL/issues). The detailed parameters and simulation pipeline are presented in the paper.
+To extensively evaluate the performance under GDL on large datasets, we generated two new large-scale simulated datasets comprising 200 and 500 taxa, which we call SIM200 and SIM500, respectively. The datasets are publicly available on [**Zenodo**](https://zenodo.org/records/18605522). The simulation scripts are provided in the [**wQFM-GDL Experiments**](https://github.com/abdur-rafi/wqfm-gdl-experiments) repository. The detailed parameters and simulation pipeline are presented in the paper.
 
 ## Experiments and Results
 
