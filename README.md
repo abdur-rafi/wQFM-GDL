@@ -17,9 +17,11 @@ wQFM-GDL includes two variants, wQFM-GDL-Q and wQFM-GDL-T, which operate on quar
 
 ### Packages, Programming Languages and Operating Systems Requirements
 
-- Java 11+ (developed using OpenJDK 17) 
+- Java 11+ (developed using OpenJDK 11.0.1) 
 - Platform: Ubuntu Linux (developed and tested on Ubuntu but should work on other distributions)
 - Python 3, Perl
+- Python packages: `dendropy` and `treeswift`
+  - Install using: `pip install dendropy treeswift`
 
 ## Input and output formats
 
@@ -118,8 +120,8 @@ rm manifest-quartet.txt
 ### Verify
 
 ```bash
-java -jar wQFM-GDL-v1.0.2.jar          # should print: Input file: ...
-java -jar QuartetGenMain.jar            # should print usage
+java -jar wQFM-GDL-v1.0.2.jar          # should print usage
+java -jar QuartetGenMain.jar           # should print usage
 ```
 
 ## Simulated Dataset
