@@ -39,6 +39,12 @@ public class Main {
         // inputFilePath = "test-data/e100-disco-rooted-cleaned.tre";
         // outputFilePath = "test-data/output.tre";
 
+        if(args.length < 3){
+            // System.out.println("Specify all file paths");
+            System.out.println("Usage: java -jar wQFM-GDL.jar <inputFilePath> <consensusFilePath> <outputFilePath> ");
+            System.exit(-1);
+        }
+
         inputFilePath = args[0];
         consensusFilePath = args[1];
         outputFilePath = args[2];
