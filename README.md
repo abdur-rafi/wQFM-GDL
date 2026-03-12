@@ -17,10 +17,9 @@ wQFM-GDL includes two variants, wQFM-GDL-Q and wQFM-GDL-T, which operate on quar
 
 ### Packages, Programming Languages and Operating Systems Requirements
 
-- Java 11+ (developed using OpenJDK 11.0.1) 
+- Java 11+ (tested using OpenJDK 11, 14, 17, and 21) 
 - Platform: Ubuntu Linux (developed and tested on Ubuntu but should work on other distributions)
-- Python 3, Perl
-- Python packages: `dendropy` and `treeswift`
+- Python 3, Perl. Python packages include: `dendropy` and `treeswift`
   - Install using: `pip install dendropy treeswift`
 
 ## Input and output formats
@@ -48,7 +47,7 @@ wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeli
 ./wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -t
 ```
 
-**wQFM-GDL-Q (Quartet-based)**: Sometimes more accurate than wQFM-GDL-T but only applicable for small datasets where quartet enumeration is feasible (<100 taxa, <1000 genes)
+**wQFM-GDL-Q (Quartet-based)**: Enables quartet decomposition. Sometimes more accurate than wQFM-GDL-T but only applicable for small datasets where quartet enumeration is feasible (<100 taxa, <1000 genes)
 ```bash
 ./wQFM-GDL.sh -i <input_gene_trees.tre> -o <output_species_tree.tre> -q
 ```
@@ -73,7 +72,8 @@ wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeli
 ```bash
 ./wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -q -m 8g
 ```
-Two example input files are provided to test wQFM-GDL
+Two example input files and their respective output files are provided to test wQFM-GDL. 
+
 **Using test data:**
 ```bash
 ./wQFM-GDL.sh -i testData/fungi16_genetrees.newick -o my_output.tre -t
