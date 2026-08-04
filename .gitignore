@@ -8,3 +8,6 @@ out
 input
 test-data
 bin
+tools/aster/
+__pycache__/
+*.pyc

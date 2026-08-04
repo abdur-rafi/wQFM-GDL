@@ -21,6 +21,7 @@ wQFM-GDL includes two variants, wQFM-GDL-Q and wQFM-GDL-T, which operate on quar
 - Platform: Ubuntu Linux (developed and tested on Ubuntu but should work on other distributions)
 - Python 3, Perl. Python packages include: `dendropy` and `treeswift`
   - Install using: `pip install dendropy treeswift`
+- Optional for branch length/support annotation: the ASTER annotation tool
 
 ## Input and output formats
 
@@ -28,11 +29,12 @@ wQFM-GDL includes two variants, wQFM-GDL-Q and wQFM-GDL-T, which operate on quar
 - The input gene trees should be in the Newick format
 - The gene trees can contain multi-copy genes, missing taxa or polytomies.
 - The gene trees may or may not contain branch support/length.
-- For multicopy gene trees, the multicopy genes can have the same name in the input gene trees (e.g., ((speciesA,speciesB),(speciesB,speciesC));) or the names can be in the format speciesid_geneid (e.g., ((speciesA_gene1,speciesB_gene1),(speciesB_gene2,speciesC_gene1));).
+- For multicopy gene trees, repeated copies can use the same species label in the input gene trees (e.g., `((speciesA,speciesB),(speciesB,speciesC));`) or one copy separator in `species_copy` format (e.g., `((speciesA_gene1,speciesB_gene1),(speciesB_gene2,speciesC_gene1));`).
+- wQFM-GDL treats `_` as the species/copy separator. Species labels and copy IDs must not themselves contain `_`; labels with more than one `_` are not supported yet.
 
 ### Output
 
-Output file contains the estimated species tree in the Newick format.
+By default, the output file contains the estimated species tree topology in Newick format. If `--annotate-branches` is used, the final output includes branch lengths/support annotations on the wQFM-GDL topology.
 
 ## Quick Start
 
@@ -59,6 +61,9 @@ wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeli
 - `-t`, `--tree`: Use tree-based pipeline (wQFM-GDL-T)
 - `-q`, `--quartet`: Use quartet-based pipeline (wQFM-GDL-Q)
 - `-m`, `--memory`: Java heap size (e.g., `8g`, `16g`, `60g`). Default: JVM default
+- `--annotate-branches`: Add branch lengths/support to the inferred topology
+- `--branch-annotation-tool`: Path to the branch annotation binary. If omitted, wQFM-GDL checks `BRANCH_ANNOTATION_BIN`, `tools/aster/bin/astral-pro3`, and then `astral-pro3` from `PATH`
+- `--branch-annotation-level`: Branch annotation detail level. Default: `2`
 - `-h`, `--help`: Show help message
 
 ### Examples
@@ -72,16 +77,50 @@ wQFM-GDL provides a unified script (`wQFM-GDL.sh`) that runs the complete pipeli
 ```bash
 ./wQFM-GDL.sh -i gene_trees.tre -o species_tree.tre -q -m 8g
 ```
-Two example input files and their respective output files are provided to test wQFM-GDL. 
+
+**Running wQFM-GDL-T with branch annotation:**
+```bash
+./wQFM-GDL.sh -i gene_trees.tre -o species_tree.annotated.tre -t --annotate-branches
+```
+
+Example input files and their respective output files are provided to test wQFM-GDL. `S25_genetrees.newick` uses repeated species labels, while `fungi16_genetrees.newick` uses the supported `species_copy` label style.
 
 **Using test data:**
 ```bash
-./wQFM-GDL.sh -i testData/fungi16_genetrees.newick -o my_output.tre -t
+./wQFM-GDL.sh -i testData/S25_genetrees.newick -o my_output.tre -t
 ```
 
 ### Intermediate files
 
-All intermediate files are stored in `<basename>-wqfm-files/` directory next to the output file. This includes cleaned trees, resolved trees, DISCO outputs, consensus trees, and quartets (for `-q` mode).
+All intermediate files are stored in `<basename>-wqfm-files/` directory next to the output file. This includes cleaned trees, resolved trees, DISCO outputs, consensus trees, and quartets (for `-q` mode). If `--annotate-branches` is used, the directory also includes the raw wQFM-GDL topology, the branch-length-preserving annotation input, and the branch annotation log.
+
+### Optional branch annotation
+
+wQFM-GDL can optionally annotate the inferred topology with branch lengths and support values. This is a post-processing step; it is not used to infer the topology.
+This annotation step uses ASTRAL-Pro3 from the ASTER package.
+
+Install the optional annotation tool from the ASTER package using one of the following approaches:
+
+```bash
+conda install -c bioconda aster
+```
+
+or download/build the Linux ASTER release and place the binary at:
+
+```bash
+tools/aster/bin/astral-pro3
+```
+
+The runner searches for the annotation binary in this order:
+
+```text
+--branch-annotation-tool <path>
+BRANCH_ANNOTATION_BIN
+tools/aster/bin/astral-pro3
+astral-pro3 from PATH
+```
+
+When branch annotation is enabled, wQFM-GDL prepares a separate gene-tree input that converts `species_copy` labels back to repeated species labels while preserving the original branch lengths/support in the input gene trees.
 
 
 ## Building from source

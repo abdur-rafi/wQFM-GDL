@@ -6,51 +6,97 @@ This script processes Newick format gene trees where multi-copy genes may have
 the same name (e.g., ((speciesA,speciesB),(speciesB,speciesC))).
 
 Logic:
-1. Check if any leaf names contain underscores across all trees
-2. If no underscores found, check for duplicates in each tree
-3. Add _1, _2, _3, etc. suffixes to duplicate leaves to make them unique
+1. Validate leaf labels containing underscores. A label with one underscore is
+   treated as species_copy. Labels with more than one underscore are ambiguous
+   and rejected for now.
+2. Check for duplicate plain species labels in each tree.
+3. Add _1, _2, _3, etc. suffixes to duplicate plain species labels.
 
 Usage:
     python3 uniquify_leaves.py <input_file> <output_file>
 """
 
 import sys
-import re
 from collections import Counter
+
+DELIMITERS = set('(),;: \t\n\r')
+
+def previous_non_whitespace(text, index):
+    """Return the previous non-whitespace character before index, or None."""
+    index -= 1
+    while index >= 0 and text[index] in ' \t\n\r':
+        index -= 1
+    return text[index] if index >= 0 else None
 
 def extract_leaf_names(newick_str):
     """Extract all leaf names from a Newick string."""
-    # Remove everything after colons (branch lengths)
-    newick_str = re.sub(r':[0-9.eE-]+', '', newick_str)
-    # Remove branch support values (numbers immediately after closing parentheses)
-    newick_str = re.sub(r'\)([0-9.eE-]+)', ')', newick_str)
-    # Remove whitespace
-    newick_str = newick_str.strip()
-    # Extract leaf names: anything that's not a special character
-    # Leaf names are between commas, parentheses, or semicolons
-    leaves = re.findall(r'([^(),;:\s]+)', newick_str)
-    return [leaf for leaf in leaves if leaf]
+    leaves = []
+    i = 0
 
-def has_underscores(trees):
-    """Check if any leaf name contains an underscore across all trees."""
-    for tree in trees:
+    while i < len(newick_str):
+        char = newick_str[i]
+        if char in DELIMITERS:
+            i += 1
+            continue
+
+        j = i
+        while j < len(newick_str) and newick_str[j] not in DELIMITERS:
+            j += 1
+
+        label = newick_str[i:j]
+        prev_char = previous_non_whitespace(newick_str, i)
+        if prev_char in ('(', ',') or prev_char is None:
+            leaves.append(label)
+
+        i = j
+
+    return leaves
+
+def underscored_leaf_names(trees):
+    """Return leaf names containing underscores across all trees."""
+    underscored = []
+    for tree_index, tree in enumerate(trees, 1):
         leaves = extract_leaf_names(tree)
         for leaf in leaves:
             if '_' in leaf:
-                return True
-    return False
+                underscored.append((tree_index, leaf))
+    return underscored
+
+def ambiguous_copy_labels(trees):
+    """Return underscore labels that are not valid species_copy labels."""
+    ambiguous = []
+    for tree_index, tree in enumerate(trees, 1):
+        leaves = extract_leaf_names(tree)
+        for leaf in leaves:
+            if '_' not in leaf:
+                continue
+
+            parts = leaf.split('_')
+            if len(parts) != 2 or not parts[0] or not parts[1]:
+                ambiguous.append((tree_index, leaf))
+
+    return ambiguous
+
+def duplicate_copy_labels(trees):
+    """Return exact duplicate labels that already use species_copy form."""
+    duplicates = []
+    for tree_index, tree in enumerate(trees, 1):
+        leaves = extract_leaf_names(tree)
+        counts = Counter(leaves)
+        for leaf, count in counts.items():
+            if '_' in leaf and count > 1:
+                duplicates.append((tree_index, leaf, count))
+
+    return duplicates
 
 def uniquify_tree(newick_str):
     """Add suffixes to duplicate leaf names in a single tree."""
-    # First, extract leaves to identify duplicates (with branch supports removed)
-    cleaned_str = re.sub(r':[0-9.eE-]+', '', newick_str)
-    cleaned_str = re.sub(r'\)([0-9.eE-]+)', ')', cleaned_str)
-    leaves = re.findall(r'([^(),;:\s]+)', cleaned_str)
-    leaves = [leaf for leaf in leaves if leaf]
+    # First, extract leaves to identify duplicates.
+    leaves = extract_leaf_names(newick_str)
     
     # Count occurrences of each leaf name
     leaf_counts = Counter(leaves)
-    duplicates = {leaf: count for leaf, count in leaf_counts.items() if count > 1}
+    duplicates = {leaf: count for leaf, count in leaf_counts.items() if '_' not in leaf and count > 1}
     
     if not duplicates:
         # No duplicates, return as is
@@ -60,40 +106,33 @@ def uniquify_tree(newick_str):
     result = []
     i = 0
     replacement_counter = {leaf: 0 for leaf in duplicates}
+    used_labels = set(leaves)
     
     while i < len(newick_str):
         char = newick_str[i]
         
         # Check if we're at the start of a potential label (not a special character)
-        if char not in '(),;: \t\n\r':
+        if char not in DELIMITERS:
             # Extract the full label
             j = i
-            while j < len(newick_str) and newick_str[j] not in '(),:; \t\n\r':
+            while j < len(newick_str) and newick_str[j] not in DELIMITERS:
                 j += 1
             label = newick_str[i:j]
             
-            # Determine if this is a branch support or a leaf name
-            # Look back to the previous non-whitespace character
-            prev_char_idx = i - 1
-            while prev_char_idx >= 0 and newick_str[prev_char_idx] in ' \t\n\r':
-                prev_char_idx -= 1
-            
-            prev_char = newick_str[prev_char_idx] if prev_char_idx >= 0 else None
-            
-            # If previous char is ')', this label is likely a branch support (if it's numeric)
-            # If previous char is '(' or ',', this is definitely a leaf name
-            is_likely_support = (prev_char == ')' and 
-                               re.match(r'^[0-9.eE+-]+$', label) is not None)
-            
-            if is_likely_support:
-                # This is a branch support value, keep as is
-                result.append(label)
-            elif label in duplicates:
+            prev_char = previous_non_whitespace(newick_str, i)
+            is_leaf_label = prev_char in ('(', ',') or prev_char is None
+
+            if is_leaf_label and label in duplicates:
                 # This is a duplicate leaf name - add suffix
-                replacement_counter[label] += 1
-                result.append(f"{label}_{replacement_counter[label]}")
+                while True:
+                    replacement_counter[label] += 1
+                    new_label = f"{label}_{replacement_counter[label]}"
+                    if new_label not in used_labels:
+                        used_labels.add(new_label)
+                        result.append(new_label)
+                        break
             else:
-                # Regular leaf name (non-duplicate) - keep as is
+                # Regular label, branch length, or internal node label - keep as is
                 result.append(label)
             
             i = j
@@ -109,17 +148,32 @@ def process_trees(input_file, output_file):
     with open(input_file, 'r') as f:
         trees = [line.strip() for line in f if line.strip()]
     
-    # Check if any tree has underscores in leaf names
-    if has_underscores(trees):
-        print("Leaf names contain underscores. Assuming format is speciesid_geneid.")
-        print("No modification needed. Copying input to output.")
-        # Copy as-is
-        with open(output_file, 'w') as f:
-            for tree in trees:
-                f.write(tree + '\n')
-        return
+    # Labels with one underscore are accepted as species_copy. More underscores
+    # are ambiguous because species names themselves cannot contain underscores.
+    ambiguous = ambiguous_copy_labels(trees)
+    if ambiguous:
+        print("Error: ambiguous underscores in input leaf labels.", file=sys.stderr)
+        print('wQFM-GDL treats "_" as the species/copy separator and supports labels as species_copy.', file=sys.stderr)
+        print('Species labels and copy IDs must not themselves contain "_".', file=sys.stderr)
+        print("Examples:", file=sys.stderr)
+        for tree_index, leaf in ambiguous[:5]:
+            print(f"  tree {tree_index}: {leaf}", file=sys.stderr)
+        if len(ambiguous) > 5:
+            print(f"  ... and {len(ambiguous) - 5} more labels", file=sys.stderr)
+        sys.exit(1)
+
+    duplicate_copies = duplicate_copy_labels(trees)
+    if duplicate_copies:
+        print("Error: duplicate copy-labeled leaf labels found.", file=sys.stderr)
+        print("Input labels in species_copy form must be unique within each gene tree.", file=sys.stderr)
+        print("Examples:", file=sys.stderr)
+        for tree_index, leaf, count in duplicate_copies[:5]:
+            print(f"  tree {tree_index}: {leaf} appears {count} times", file=sys.stderr)
+        if len(duplicate_copies) > 5:
+            print(f"  ... and {len(duplicate_copies) - 5} more labels", file=sys.stderr)
+        sys.exit(1)
     
-    print("No underscores found in leaf names. Checking for duplicates...")
+    print("Checking for duplicate plain species labels...")
     
     # Process each tree to uniquify duplicates
     modified_trees = []
