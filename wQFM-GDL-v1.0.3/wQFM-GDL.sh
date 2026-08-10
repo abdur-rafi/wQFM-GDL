@@ -13,7 +13,8 @@
 #   6. Greedy consensus tree  (run_paup_consensus.pl)
 #   7. DISCO rooting only     (disco.py --no-decomp)
 #   8. Clean rooted trees     (treeCleaner.py)
-#   9. Species tree inference (wQFM-GDL-v1.0.2.jar)
+#   9. Species tree inference (wQFM-GDL-v1.0.3.jar)
+#   10. Optional branch annotation
 #
 # Pipeline (-q, wQFM-GDL-Q, quartet-based):
 #   0. Uniquify duplicate leaves (uniquify_leaves.py)
@@ -24,6 +25,7 @@
 #   5. Clean rooted trees     (treeCleaner.py)
 #   6. Generate quartets      (QuartetGenMain.jar)
 #   7. Species tree inference (wQFM-v1.4.jar)
+#   8. Optional branch annotation
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -34,6 +36,10 @@ INPUT_FILE=""
 OUTPUT_FILE=""
 MODE=""
 HEAP_SIZE=""
+ANNOTATE_BRANCHES="false"
+BRANCH_ANNOTATION_BIN_ENV="${BRANCH_ANNOTATION_BIN:-${ASTRAL_PRO3_BIN:-}}"
+BRANCH_ANNOTATION_BIN=""
+BRANCH_ANNOTATION_LEVEL="2"
 
 usage() {
     echo "Usage: bash wQFM-GDL.sh -i <input_gene_trees> -o <output_species_tree> (-t | -q)"
@@ -44,7 +50,54 @@ usage() {
     echo "  -t, --tree     Tree-based pipeline: gene trees → DISCO → PAUP → wQFM-GDL (wQFM-GDL-T)"
     echo "  -q, --quartet  Quartet-based pipeline: gene trees → quartets → wQFM (wQFM-GDL-Q)"
     echo "  -m, --memory   Java heap size (e.g. 8g, 16g, 512m). Default: JVM default"
+    echo "      --annotate-branches"
+    echo "                Add branch lengths/support to the inferred topology"
+    echo "      --branch-annotation-tool <path>"
+    echo "                Path to branch annotation binary. Also checks BRANCH_ANNOTATION_BIN, tools/aster/bin, PATH"
+    echo "      --branch-annotation-level <value>"
+    echo "                Branch annotation detail level. Default: 2"
     echo "  -h, --help     Show this help message"
+}
+
+resolve_branch_annotation_tool() {
+    local candidate=""
+
+    if [[ -n "$BRANCH_ANNOTATION_BIN" ]]; then
+        if [[ -x "$BRANCH_ANNOTATION_BIN" ]]; then
+            echo "$BRANCH_ANNOTATION_BIN"
+            return 0
+        fi
+        if command -v "$BRANCH_ANNOTATION_BIN" &>/dev/null; then
+            command -v "$BRANCH_ANNOTATION_BIN"
+            return 0
+        fi
+        return 1
+    fi
+
+    if [[ -n "$BRANCH_ANNOTATION_BIN_ENV" ]]; then
+        if [[ -x "$BRANCH_ANNOTATION_BIN_ENV" ]]; then
+            echo "$BRANCH_ANNOTATION_BIN_ENV"
+            return 0
+        fi
+        if command -v "$BRANCH_ANNOTATION_BIN_ENV" &>/dev/null; then
+            command -v "$BRANCH_ANNOTATION_BIN_ENV"
+            return 0
+        fi
+        return 1
+    fi
+
+    candidate="$SCRIPT_DIR/tools/aster/bin/astral-pro3"
+    if [[ -x "$candidate" ]]; then
+        echo "$candidate"
+        return 0
+    fi
+
+    if command -v astral-pro3 &>/dev/null; then
+        command -v astral-pro3
+        return 0
+    fi
+
+    return 1
 }
 
 while [[ $# -gt 0 ]]; do
@@ -67,6 +120,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         -m|--memory)
             HEAP_SIZE="$2"
+            shift 2
+            ;;
+        --annotate-branches)
+            ANNOTATE_BRANCHES="true"
+            shift
+            ;;
+        --branch-annotation-tool|--astral-pro3)
+            BRANCH_ANNOTATION_BIN="$2"
+            shift 2
+            ;;
+        --branch-annotation-level|--astral-u)
+            BRANCH_ANNOTATION_LEVEL="$2"
             shift 2
             ;;
         -h|--help)
@@ -130,6 +195,13 @@ DISCO_NO_DECOMP_CLEANED="$INTERMEDIATE_DIR/${INPUT_BASENAME}-disco-rooted-cleane
 CONSENSUS_PREFIX="$INTERMEDIATE_DIR/${INPUT_BASENAME}-consensus"
 CONSENSUS_TREE="${CONSENSUS_PREFIX}.greedy.tree"
 QUARTETS_FILE="$INTERMEDIATE_DIR/${INPUT_BASENAME}-quartets.txt"
+BRANCH_ANNOTATION_INPUT="$INTERMEDIATE_DIR/${INPUT_BASENAME}-branch-annotation-input.tre"
+BRANCH_ANNOTATION_LOG="$INTERMEDIATE_DIR/${INPUT_BASENAME}-branch-annotation.log"
+WQFM_TOPOLOGY_FILE="$INTERMEDIATE_DIR/${INPUT_BASENAME}-wqfm-topology.tre"
+WQFM_OUTPUT_FILE="$OUTPUT_FILE"
+if [[ "$ANNOTATE_BRANCHES" == "true" ]]; then
+    WQFM_OUTPUT_FILE="$WQFM_TOPOLOGY_FILE"
+fi
 
 # ---------------------------------------------------------------------------
 # Java command setup
@@ -144,7 +216,7 @@ if [[ -n "$HEAP_SIZE" ]]; then
     JAVA_OPTS="-Xmx${HEAP_SIZE}"
 fi
 
-WQFM_JAR="$SCRIPT_DIR/wQFM-GDL-v1.0.2.jar"
+WQFM_JAR="$SCRIPT_DIR/wQFM-GDL-v1.0.3.jar"
 QUARTET_GEN_JAR="$SCRIPT_DIR/QuartetGenMain.jar"
 WQFM_Q_JAR="$SCRIPT_DIR/wQFM-v1.4/wQFM-v1.4.jar"
 
@@ -154,7 +226,7 @@ if [[ "$MODE" == "t" ]]; then
         echo "Please build it first:"
         echo "  javac -d bin \$(find src -name '*.java')"
         echo "  echo 'Main-Class: src.Main' > manifest.txt"
-        echo "  jar cfm wQFM-GDL-v1.0.2.jar manifest.txt -C bin ."
+        echo "  jar cfm wQFM-GDL-v1.0.3.jar manifest.txt -C bin ."
         exit 1
     fi
 elif [[ "$MODE" == "q" ]]; then
@@ -173,6 +245,24 @@ elif [[ "$MODE" == "q" ]]; then
     fi
 fi
 
+BRANCH_ANNOTATION_TOOL_RESOLVED=""
+if [[ "$ANNOTATE_BRANCHES" == "true" ]]; then
+    if ! [[ "$BRANCH_ANNOTATION_LEVEL" =~ ^[0-9]+$ ]]; then
+        echo "Error: --branch-annotation-level must be a non-negative integer."
+        exit 1
+    fi
+
+    if ! BRANCH_ANNOTATION_TOOL_RESOLVED="$(resolve_branch_annotation_tool)"; then
+        echo "Error: branch annotation binary not found."
+        echo "Install the optional annotation tool, then either:"
+        echo "  - pass --branch-annotation-tool /path/to/annotation-tool"
+        echo "  - set BRANCH_ANNOTATION_BIN=/path/to/annotation-tool"
+        echo "  - place it at tools/aster/bin/astral-pro3"
+        echo "  - add the annotation binary to PATH"
+        exit 1
+    fi
+fi
+
 # ---------------------------------------------------------------------------
 # Pipeline
 # ---------------------------------------------------------------------------
@@ -183,6 +273,11 @@ echo "Output species tree : $OUTPUT_FILE"
 echo "Intermediate files  : $INTERMEDIATE_DIR"
 echo "Mode                : $MODE_LABEL"
 [[ -n "$HEAP_SIZE" ]] && echo "Java heap size      : $HEAP_SIZE" || echo "Java heap size      : JVM default"
+if [[ "$ANNOTATE_BRANCHES" == "true" ]]; then
+    echo "Branch annotation   : enabled"
+    echo "Annotation tool     : $BRANCH_ANNOTATION_TOOL_RESOLVED"
+    echo "Annotation level    : $BRANCH_ANNOTATION_LEVEL"
+fi
 echo ""
 
 # Step 0 — Uniquify duplicate leaf names if needed  [common to both modes]
@@ -193,6 +288,16 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 echo ""
+
+if [[ "$ANNOTATE_BRANCHES" == "true" ]]; then
+    echo "[A] Preparing branch-length-preserving annotation input..."
+    python3 "$SCRIPT_DIR/scripts/prepare_branch_annotation_input.py" "$GT_UNIQUIFIED" "$BRANCH_ANNOTATION_INPUT"
+    if [[ $? -ne 0 ]]; then
+        echo "Error: prepare_branch_annotation_input.py failed."
+        exit 1
+    fi
+    echo ""
+fi
 
 # Step 1 — Clean preprocessed gene trees  [common to both modes]
 echo "[1] Cleaning input gene trees..."
@@ -250,8 +355,8 @@ if [[ "$MODE" == "q" ]]; then
     # Step 7 — wQFM species tree inference from quartets
     echo "[7/7] Running wQFM species tree inference from quartets..."
     QUARTETS_FILE_ABS="$(cd "$(dirname "$QUARTETS_FILE")" && pwd)/$(basename "$QUARTETS_FILE")"
-    OUTPUT_FILE_ABS="$(cd "$(dirname "$OUTPUT_FILE")" 2>/dev/null || (mkdir -p "$(dirname "$OUTPUT_FILE")" && cd "$(dirname "$OUTPUT_FILE")") && pwd)/$(basename "$OUTPUT_FILE")"
-    (cd "$SCRIPT_DIR/wQFM-v1.4" && java $JAVA_OPTS -jar "wQFM-v1.4.jar" -i "$QUARTETS_FILE_ABS" -o "$OUTPUT_FILE_ABS")
+    WQFM_OUTPUT_FILE_ABS="$(cd "$(dirname "$WQFM_OUTPUT_FILE")" 2>/dev/null || (mkdir -p "$(dirname "$WQFM_OUTPUT_FILE")" && cd "$(dirname "$WQFM_OUTPUT_FILE")") && pwd)/$(basename "$WQFM_OUTPUT_FILE")"
+    (cd "$SCRIPT_DIR/wQFM-v1.4" && java $JAVA_OPTS -jar "wQFM-v1.4.jar" -i "$QUARTETS_FILE_ABS" -o "$WQFM_OUTPUT_FILE_ABS")
     if [[ $? -ne 0 ]]; then
         echo "Error: wQFM quartet-based inference failed."
         exit 1
@@ -310,12 +415,33 @@ else
     java $JAVA_OPTS -jar "$WQFM_JAR" \
         "$DISCO_NO_DECOMP_CLEANED" \
         "$CONSENSUS_TREE" \
-        "$OUTPUT_FILE"
+        "$WQFM_OUTPUT_FILE"
     if [[ $? -ne 0 ]]; then
         echo "Error: wQFM-GDL inference failed."
         exit 1
     fi
 
+fi
+
+if [[ "$ANNOTATE_BRANCHES" == "true" ]]; then
+    echo "[A] Annotating wQFM-GDL topology..."
+    WQFM_TOPOLOGY="$(tr -d '\n\r' < "$WQFM_OUTPUT_FILE")"
+    if [[ -z "$WQFM_TOPOLOGY" ]]; then
+        echo "Error: wQFM-GDL topology file is empty: $WQFM_OUTPUT_FILE"
+        exit 1
+    fi
+
+    "$BRANCH_ANNOTATION_TOOL_RESOLVED" \
+        -C \
+        -u "$BRANCH_ANNOTATION_LEVEL" \
+        -o "$OUTPUT_FILE" \
+        -c "$WQFM_TOPOLOGY" \
+        "$BRANCH_ANNOTATION_INPUT" \
+        2> "$BRANCH_ANNOTATION_LOG"
+    if [[ $? -ne 0 ]]; then
+        echo "Error: branch annotation failed. See '$BRANCH_ANNOTATION_LOG'."
+        exit 1
+    fi
 fi
 
 echo ""
