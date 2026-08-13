@@ -171,6 +171,10 @@ To extensively evaluate the performance under GDL on large datasets, we generate
 
 All scripts used for the experiments, plots, simulation and most of the results (output species trees and RF scores of the experiments) are shared in the repository [**wQFM-GDL Experiments**](https://github.com/abdur-rafi/wqfm-gdl-experiments).
 
+## Acknowledgement
+We internally use DISCO to decompose multicopy gene trees into single-copy gene trees. We also use ASTRAL-Pro’s methods for gene-tree tagging and branch-length annotation.
+
+
 ## Bug Report
 
 We are always looking to improve our codebase.
