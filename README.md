@@ -2,7 +2,7 @@
 
 This repository contains the official implementation of
 
-[**wQFM-GDL Enables Accurate Quartet-based Genome-scale Species Tree Inference Under Gene Duplication and Loss**](https://www.biorxiv.org/content/10.1101/2025.04.04.647228v3)
+[**wQFM-GDL Enables Accurate Quartet-based Genome-scale Species Tree Inference Under Gene Duplication and Loss**](https://link.springer.com/chapter/10.1007/978-3-032-26891-4_8)
 
 wQFM-GDL is a scalable and accurate quartet-based method for species tree estimation from multi-copy gene family trees, explicitly modeling both gene duplication and loss (GDL) and incomplete lineage sorting (ILS). wQFM-GDL integrates the concept of species-driven quartets (SQs) within a re-engineered QFM framework, enabling direct computation of refined quartet scores from gene family trees containing both orthologs and paralogs.
 
@@ -174,6 +174,23 @@ All scripts used for the experiments, plots, simulation and most of the results 
 ## Acknowledgement
 We internally use DISCO to decompose multicopy gene trees into single-copy gene trees. We also use ASTRAL-Pro’s methods for gene-tree tagging and branch-length annotation.
 
+## License
+The contents of this repository are licensed under the AGPL-3.0 license.
+
+See [LICENSE](./LICENSE) for the full license text.
+
+## Citation (BibTeX)
+If you use our algorithm or wish to use any part of this repository, please do cite our paper.
+```
+@inproceedings{rafi2026wqfm,
+  title={wQFM-GDL Enables Accurate Quartet-based Genome-scale Species Tree Inference Under Gene Duplication and Loss},
+  author={Rafi, Abdur and Rumi, Ahmed Mahir Sultan and Hakim, Sheikh Azizul and Bayzid, Md Shamsuzzoha},
+  booktitle={RECOMB International Workshop on Comparative Genomics},
+  pages={139--160},
+  year={2026},
+  organization={Springer}
+}
+```
 
 ## Bug Report
 
